@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Pleos Vehicle SDK: Odometer API (@RequiresPermission = CAR_DRIVE, protection level normal) -->
+    <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
+
+    <!-- AAOS standard: GEAR_SELECTION, CURRENT_GEAR, PARKING_BRAKE_ON, IGNITION_STATE (protection level normal) -->
+    <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
+
+    <!-- AAOS vendor property VENDOR_GEAR_SELECTION (0x21400400), which the Virtual Console publishes.
+         This permission is signature|privileged, so it is expected to be denied. Declared only to record the result. -->
+    <uses-permission android:name="android.car.permission.CAR_VENDOR_EXTENSION" />
+
+    <uses-feature
+        android:name="android.hardware.type.automotive"
+        android:required="true" />
+
+    <application
+        android:allowBackup="false"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Distraction Optimization (DO) declaration.
+                 Pleos policy: apps without DO cannot be used while driving.
+                 The spike needs the live panel to stay visible while driving. -->
+            <meta-data
+                android:name="distractionOptimized"
+                android:value="true" />
+        </activity>
+    </application>
+
+</manifest>
