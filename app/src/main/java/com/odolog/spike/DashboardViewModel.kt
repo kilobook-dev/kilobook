@@ -2,24 +2,66 @@ package com.odolog.spike
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.odolog.spike.data.Purpose
+import com.odolog.spike.data.Trip
+import com.odolog.spike.recorder.RecorderConfig
+import com.odolog.spike.recorder.RecorderEvent
+import com.odolog.spike.recorder.RecorderStatus
+import com.odolog.spike.service.RecorderService
 import com.odolog.spike.vehicle.DashboardState
-import com.odolog.spike.vehicle.VehicleMonitor
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 
 /**
- * Owns the vehicle connection for the screen's whole life.
- * It survives the screen being covered (e.g. by the driving block screen) and is cleared
- * only when the screen is finished, which is when listeners are unregistered and the SDK released.
+ * The screen's view of the shared recording session.
+ * Holds the session while the screen exists (Phase 2 behavior); the service holds it independently.
  */
 class DashboardViewModel(application: Application) : AndroidViewModel(application) {
-    private val monitor = VehicleMonitor(application)
-    val state: StateFlow<DashboardState> = monitor.state
+    private val graph = application.graph
+    private val session = graph.session
+
+    val vehicle: StateFlow<DashboardState> = session.vehicle
+    val recorder: StateFlow<RecorderStatus> = session.recorder
+    val owners: StateFlow<Set<String>> = session.activeOwners
+    val config: StateFlow<RecorderConfig> = graph.settings.state
+    val trips: StateFlow<List<Trip>> = graph.db.tripDao().observeAll()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     init {
-        monitor.start()
+        session.acquire(OWNER)
+    }
+
+    /** Screen became visible: app start or return. A chance to re-ask and to check for gaps. */
+    fun onScreenStart() {
+        if (config.value.backgroundService) RecorderService.start(getApplication())
+        session.send(RecorderEvent.ScreenStarted)
+    }
+
+    /** Screen went to the background: save the last known odometer once more. */
+    fun onScreenStop() {
+        session.send(RecorderEvent.ScreenStopped)
+    }
+
+    fun choosePurpose(tripId: Long, purpose: Purpose) = session.send(RecorderEvent.ChoosePurpose(tripId, purpose))
+    fun later(tripId: Long) = session.send(RecorderEvent.Later(tripId))
+    fun endTripManually() = session.send(RecorderEvent.ManualEnd)
+    fun resetRecords() = session.send(RecorderEvent.Reset)
+
+    fun updateConfig(change: (RecorderConfig) -> RecorderConfig) {
+        val before = config.value.backgroundService
+        graph.settings.update(change)
+        val after = config.value.backgroundService
+        if (!before && after) RecorderService.start(getApplication())
+        if (before && !after) RecorderService.stop(getApplication())
     }
 
     override fun onCleared() {
-        monitor.stop()
+        session.release(OWNER)
+    }
+
+    companion object {
+        const val OWNER = "screen"
     }
 }

@@ -5,8 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.odolog.spike.ui.DashboardScreen
 
 class MainActivity : ComponentActivity() {
@@ -16,9 +14,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {
-                val state by viewModel.state.collectAsStateWithLifecycle()
-                DashboardScreen(state)
+                DashboardScreen(viewModel)
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        viewModel.onScreenStart()
+    }
+
+    override fun onStop() {
+        viewModel.onScreenStop()
+        super.onStop()
     }
 }
