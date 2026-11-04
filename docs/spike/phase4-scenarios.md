@@ -2,6 +2,9 @@
 
 확인일: 2026-11-04 / 에뮬레이터: Pleos Connect v2.1.0 (Android 14) / Vehicle SDK 2.3.2
 
+이 문서의 앱 이름·패키지·로그 태그는 지금 값 기준이다: 앱 이름 `오도로그 스파이크`, 패키지 `com.odolog.spike`, 로그 태그 `OdologSpike`.
+앱 이름은 가칭이라 바뀔 수 있다. 바뀌면 저장소 루트 `app.properties`의 값으로 바꿔 읽는다.
+
 ## 디버그 로그
 
 화면 맨 아래 "디버그 로그 N건" → **펼치기**. 최신순, 최근 300건, 한 줄 = 시각 · 호출(또는 단계) · 결과.
@@ -26,7 +29,8 @@
 
 1. 에뮬레이터 `Pleos_Connect_v2.1.0`을 켠다 (Android Studio Device Manager, Cold Boot 권장).
 2. Virtual Console을 연다: 터미널에서 `adb forward tcp:8088 tcp:8088` → 브라우저에서 http://127.0.0.1:8088
-3. 앱 목록에서 **오도로그 스파이크**를 연다 (또는 `adb shell am start -n com.odolog.spike/.MainActivity`).
+3. 처음 한 번: 시간대를 한국 표준시로 맞춘다 (아래 "시간대 설정"). 한 번 바꾸면 에뮬레이터를 다시 켜도 유지된다.
+4. 앱 목록에서 **오도로그 스파이크**를 연다 (또는 `adb shell am start -n com.odolog.spike/.MainActivity`).
 
 콘솔 조작
 
@@ -43,11 +47,25 @@
 - **재부팅은 `adb reboot`으로 하지 않는다.** 이 에뮬레이터는 `adb reboot` 9초 뒤 그래픽 모듈에서 크래시하며 꺼졌다
   (`libgfxstream_backend` SIGSEGV). 에뮬레이터 창을 닫고 Device Manager에서 다시 켠다.
   이 AVD는 설정상 항상 Cold Boot로 켜진다 (`fastboot.forceColdBoot=yes`). 다시 켠 뒤 `adb forward tcp:8088 tcp:8088`과 콘솔 페이지 새로고침을 다시 한다.
-- 에뮬레이터 시간대가 `America/Los_Angeles`라 앱에 보이는 시각이 한국 시간보다 17시간 이르다 (11월 기준). 기기 시계가 틀린 것은 아니다.
 - 이 차량 홈 화면에서는 Back 키로 앱이 닫히지 않는다. 다른 앱 뒤로 보내려면 하단 독에서 다른 앱(예: 차량 제어)을 누른다.
 - **확인 대기 주행이 여러 건이면 카드가 길어진다.** 아래 목록과 설정은 스크롤해서 본다 (디자인은 범위 밖이라 그대로 둠).
 - 깨끗한 상태에서 시작하려면 화면 아래 설정 영역의 **기록 초기화**를 누른다.
 - 설정 영역의 기본값: 무변화 종료 N=1분, 재시작 정리 기준 1분(운영 10분), 대체 규칙 강제 꺼짐, 백그라운드 기록 켜짐.
+
+### 시간대 설정 (한국 표준시)
+
+에뮬레이터는 처음에 `America/Los_Angeles`다. 자동 시간대가 켜져 있고 가상 통신망이 미국(MCC 310)으로 잡혀 있기 때문이다.
+이대로면 앱에 보이는 시각이 한국 시간보다 17시간 이르다 (11월 기준). 시연 영상 전에 꼭 바꾼다.
+
+1. 에뮬레이터에서 설정 › 날짜 및 시간을 연다. 터미널에서 바로 열기: `adb shell am start -a android.settings.DATE_SETTINGS`
+2. **자동으로 시간대 설정**을 끈다.
+3. **시간대 선택** → 목록 아래쪽의 **한국 표준시 (GMT+09:00)**를 누른다. 목록은 시차 순이고, "서울"이 아니라 "한국 표준시"로 나온다.
+4. 확인: `adb shell getprop persist.sys.timezone` → `Asia/Seoul`, 상태 표시줄 시각 = 한국 시간.
+
+- adb 명령 한 줄로는 바꿀 수 없다. `adb shell cmd time_zone_detector suggest_manual_time_zone --zone_id Asia/Seoul`은
+  권한 부족(`SUGGEST_MANUAL_TIME_AND_ZONE`)으로 거부되고, 이 이미지는 user 빌드라 root도 없다.
+- 바꾸기 전에 열려 있던 앱 화면은 다시 열 때까지 이전 시각으로 남는 줄이 있다. 시간대를 먼저 바꾸고 앱을 새로 연다.
+- 설정 영역의 "부팅 시 자동 시작(S8)" 시각은 부팅 때 글자로 저장된 값이라, 바꾼 다음 부팅부터 한국 시간으로 나온다.
 
 ## S1 — 총 주행거리 읽기
 
@@ -99,7 +117,7 @@
 1. S3처럼 주행을 하나 만들고 P에서 카드가 뜨면 **나중에**.
 2. 카드가 사라지고 목록에 "나중에 1회".
 3. 다시 묻는 기회 — 아래 둘 중 하나:
-   - 하단 독에서 다른 앱을 띄웠다가 오도로그로 돌아온다 (화면 복귀).
+   - 하단 독에서 다른 앱을 띄웠다가 이 앱으로 돌아온다 (화면 복귀).
    - Gear Drive → Park (주행 → 정차).
 4. Gear Drive인 동안에는 카드가 안 보여야 한다.
 
@@ -128,14 +146,14 @@
 
 A. 다른 앱 뒤에 있을 때
 
-1. 하단 독에서 차량 제어 앱을 띄워 오도로그를 가린다.
+1. 하단 독에서 차량 제어 앱을 띄워 이 앱을 가린다.
 2. Gear Drive → Odometer +1 km → Gear Park.
-3. 오도로그로 돌아온다.
+3. 이 앱으로 돌아온다.
 
 B. 앱 창을 닫았을 때 (서비스만 남음)
 
 1. 터미널: `adb shell am stack list | grep odolog` → `taskId=1000057: com.odolog.spike/com.odolog.spike.MainActivity …` 같은 줄이 나온다.
-   그 번호로 `adb shell am stack remove 1000057`. 오도로그 창이 사라진다.
+   그 번호로 `adb shell am stack remove 1000057`. 앱 창이 사라진다.
 2. Gear Drive → Odometer +1 km → Gear Park.
 3. 앱을 다시 연다.
 

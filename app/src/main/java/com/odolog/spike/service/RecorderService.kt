@@ -13,6 +13,7 @@ import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.odolog.spike.AppLog
 import com.odolog.spike.MainActivity
+import com.odolog.spike.R
 import com.odolog.spike.graph
 import com.odolog.spike.vehicle.describe
 
@@ -63,7 +64,7 @@ class RecorderService : Service() {
 
     private fun notification() = NotificationCompat.Builder(this, CHANNEL_ID)
         .setSmallIcon(android.R.drawable.ic_menu_recent_history)
-        .setContentTitle("오도로그: 주행 기록 중")
+        .setContentTitle(getString(R.string.app_name) + ": 주행 기록 중")
         .setContentText("주행거리와 기어 변화를 기록하고 있습니다")
         .setContentIntent(
             PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE),

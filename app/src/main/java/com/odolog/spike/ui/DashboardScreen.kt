@@ -30,7 +30,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.stringResource
 import com.odolog.spike.AppLog
+import com.odolog.spike.R
 import com.odolog.spike.DashboardViewModel
 import com.odolog.spike.data.EndReason
 import com.odolog.spike.data.Purpose
@@ -78,7 +80,7 @@ fun DashboardScreen(viewModel: DashboardViewModel) {
     ) {
         item {
             Text(
-                "오도로그 스파이크",
+                stringResource(R.string.app_name),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 16.dp),

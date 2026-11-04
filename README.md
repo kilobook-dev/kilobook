@@ -1,9 +1,12 @@
-# 오도로그 스파이크 (Odolog Spike)
+# 오도로그 스파이크 (가칭)
 
-Pleos Connect(Android Automotive) 에뮬레이터에서 "차량 주행거리로 운행기록을 남기는 앱"이
-기술적으로 되는지 판정하기 위한 검증용 앱. 완성품이 아니며 UI 디자인은 하지 않는다.
+> 앱 이름은 아직 정하지 않았다 (가칭 "오도로그"). 같은 이름의 Google Play 앱이 있어 확정 전에 바꾼다.
+> 이름이 들어가는 빌드 값(패키지, 표시 이름, 제출 APK 파일명, 서명 인증서 이름)은 모두 [`app.properties`](app.properties) 한 곳에서 온다.
 
-- 패키지: `com.odolog.spike` · Kotlin + Jetpack Compose · minSdk 28 · 단일 Activity
+Pleos Connect(Android Automotive) 차량용 앱. 차량이 직접 읽은 총 주행거리로 업무용 운행기록을 남기고,
+운전자는 주행이 끝난 뒤 용도(업무/출퇴근/개인)만 고른다. 지금은 기술 검증(`spike-v1`)을 마치고 제출용 화면(Phase 5) 전 단계다.
+
+- 패키지: `com.odolog.spike` (`app.properties`의 `appSlug`·`appIdSuffix`) · Kotlin + Jetpack Compose · minSdk 28 · 단일 Activity
 - Vehicle SDK: `ai.pleos.playground:Vehicle:2.3.2`
 - 툴체인: AGP 8.8.2 · Gradle 8.10.2 · Kotlin 2.0.0 (공식 샘플 앱과 동일)
 
@@ -12,9 +15,8 @@ Pleos Connect(Android Automotive) 에뮬레이터에서 "차량 주행거리로 
 JDK 17 또는 21이 필요하다 (Gradle 8.10.2는 JDK 25에서 실행되지 않음).
 
 ```bash
-# 이 맥미니 기준 경로 (외장 SSD). 다른 PC는 자기 경로로 바꾼다.
-export JAVA_HOME=/Volumes/SamsungSSD/Android/jdk/jdk-21.0.13+9/Contents/Home
-export ANDROID_HOME=/Volumes/SamsungSSD/Android/sdk
+export JAVA_HOME="$(/usr/libexec/java_home -v 21)"   # macOS. 다른 OS는 JDK 21 경로
+export ANDROID_HOME="$HOME/Library/Android/sdk"     # Android Studio 기본 SDK 위치
 
 ./gradlew installDebug
 $ANDROID_HOME/platform-tools/adb shell am start -n com.odolog.spike/.MainActivity
@@ -25,9 +27,23 @@ Android Studio에서는 Settings › Build Tools › Gradle › Gradle JDK를 JD
 
 로그 보기: `adb logcat -s OdologSpike:I`
 
+테스트 환경(Pleos Connect Emulator v2.1.0, Virtual Console 조작, 시간대 설정)과 시나리오 S1~S8: [docs/spike/phase4-scenarios.md](docs/spike/phase4-scenarios.md)
+
+## 제출용 release APK
+
+```bash
+scripts/create-release-key.sh   # 처음 한 번: 저장소 밖에 서명 키 생성, local.properties에 넣을 줄 출력
+./gradlew releaseApk            # apk/TEAMNAME_Odolog_release.apk (이름은 app.properties의 teamName·appSlug)
+```
+
+서명 값이 없으면 `releaseApk`는 빌드 전에 멈춘다. 자세한 내용은 [apk/README.md](apk/README.md).
+
 ## 구조
 
 ```
+app.properties                 앱 이름 설정 (appName, appSlug, appIdSuffix, teamName)
+scripts/create-release-key.sh  release 서명 키 생성 (저장소 밖)
+apk/                           제출용 release APK 위치
 app/src/main/java/com/odolog/spike/
 ├── OdologApp.kt               Application: DB, 설정, 기록 세션을 한 곳에서 만듦
 ├── AppLog.kt                  logcat과 화면 디버그 로그에 함께 남기는 로그 (최근 300건, 연속 중복은 묶음)
@@ -53,10 +69,8 @@ app/src/main/java/com/odolog/spike/
 
 ## 문서
 
-- [Phase 1 — 샘플 앱 연결 확인](docs/phase1-sample-app.md)
-- [Phase 2 — 실시간 값 표시](docs/phase2-live-panel.md)
-- [Phase 3 — 주행 기록과 백그라운드 기록](docs/phase3-trip-recording.md)
-- [Phase 4 — 디버그 로그와 검증 시나리오 S1~S8](docs/phase4-scenarios.md)
+- [CLAUDE.md](CLAUDE.md) — 인수인계: 현재 상태, 확정된 결정, 작업 규칙, 남은 일, 새 PC 세팅 순서
+- [스파이크 기록 (Phase 1~4, 시나리오 S1~S8)](docs/spike/README.md)
 - [Pleos 문의 목록](docs/pleos-questions.md)
 
 `reference/`에는 공식 샘플 앱을 받아 두며 git에 포함하지 않는다.

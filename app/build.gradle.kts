@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,16 +7,58 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// Every build value that carries the app name comes from app.properties at the repo root (UTF-8; the name is tentative).
+val appProps = Properties().apply {
+    rootProject.file("app.properties").reader(Charsets.UTF_8).use { load(it) }
+}
+fun appProp(key: String): String =
+    appProps.getProperty(key)?.trim()?.takeIf { it.isNotEmpty() } ?: throw GradleException("app.properties: $key is missing")
+
+val appName = appProp("appName")
+val appSlug = appProp("appSlug")
+val appIdSuffix = appProp("appIdSuffix")
+val teamName = appProp("teamName")
+val releaseApkName = "${teamName}_${appSlug.replaceFirstChar { it.uppercase() }}_release.apk"
+
+// Release signing values: local.properties (git-ignored) or -P. The key file itself stays outside the repo.
+val localProps = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.isFile }?.reader(Charsets.UTF_8)?.use { load(it) }
+}
+fun signingProp(key: String): String? = providers.gradleProperty(key).orNull ?: localProps.getProperty(key)
+val releaseStoreFile = signingProp("release.storeFile")
+val hasReleaseSigning = releaseStoreFile != null
+
 android {
+    // Kotlin package of the source code (not shown to users). Renaming it means moving the source folders.
     namespace = "com.odolog.spike"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.odolog.spike"
+        applicationId = "com.$appSlug.$appIdSuffix"
         minSdk = 28
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0-spike"
+        resValue("string", "app_name", appName)
+    }
+
+    signingConfigs {
+        create("release") {
+            if (hasReleaseSigning) {
+                storeFile = file(releaseStoreFile!!)
+                storePassword = signingProp("release.storePassword")
+                keyAlias = signingProp("release.keyAlias")
+                keyPassword = signingProp("release.keyPassword")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            // Off for now: the Pleos SDK ships obfuscated and no shrink rules have been verified for it.
+            isMinifyEnabled = false
+            signingConfig = if (hasReleaseSigning) signingConfigs.getByName("release") else null
+        }
     }
 
     // Android Automotive standard APIs (Car, CarPropertyManager, CarUxRestrictionsManager)
@@ -47,4 +91,24 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.material3)
+}
+
+// ./gradlew releaseApk -> signed release APK copied to apk/<teamName>_<AppSlug>_release.apk (the submission file).
+tasks.register<Copy>("releaseApk") {
+    group = "submission"
+    description = "Builds the signed release APK and copies it to apk/$releaseApkName"
+    dependsOn("assembleRelease")
+    from(layout.buildDirectory.file("outputs/apk/release/app-release.apk"))
+    into(rootProject.layout.projectDirectory.dir("apk"))
+    rename { _: String -> releaseApkName }
+}
+
+// Without signing values, stop before building so an unsigned APK never reaches apk/.
+gradle.taskGraph.whenReady {
+    if (hasTask(":app:releaseApk") && !hasReleaseSigning) {
+        throw GradleException(
+            "Release signing is not set: add release.storeFile, release.storePassword, release.keyAlias, " +
+                "release.keyPassword to local.properties (scripts/create-release-key.sh prints them).",
+        )
+    }
 }

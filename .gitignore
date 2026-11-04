@@ -6,6 +6,8 @@ captures/
 .cxx/
 local.properties
 *.apk
+# ...except the submission APK in apk/
+!apk/*.apk
 *.aab
 *.ap_
 *.dex
@@ -17,7 +19,7 @@ local.properties
 .navigation/
 .kotlin/
 
-# Signing
+# Signing: the release key lives outside the repo; these lines catch accidental copies
 *.jks
 *.keystore
 

@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">오도로그 스파이크</string>
+    <!-- app_name is generated from appName in app.properties (app/build.gradle.kts resValue). -->
 </resources>

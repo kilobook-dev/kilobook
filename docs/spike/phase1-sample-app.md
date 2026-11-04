@@ -2,21 +2,21 @@
 
 확인일: 2026-10-31 / 에뮬레이터: Pleos Connect v2.1.0 (Android 14, API 34)
 
-## 환경 (이 맥미니 기준, 모두 외장 SSD)
+## 환경
 
 | 항목 | 경로 / 버전 |
 |---|---|
-| JDK | `/Volumes/SamsungSSD/Android/jdk/jdk-21.0.13+9/Contents/Home` (Temurin 21.0.13) |
-| Android SDK | `/Volumes/SamsungSSD/Android/sdk` |
-| Gradle 캐시 | `~/.gradle` → `/Volumes/SamsungSSD/Android/gradle` (심볼릭 링크) |
+| JDK | Temurin 21.0.13 (`$JAVA_HOME`) |
+| Android SDK | `$ANDROID_HOME` (Android Studio 기본 위치는 `~/Library/Android/sdk`) |
+| Gradle 캐시 | `~/.gradle` |
 | 샘플 앱 | `reference/pleos-sample-vehicle-app` (git 제외) |
 
 샘플 빌드·설치:
 
 ```bash
 cd reference/pleos-sample-vehicle-app
-export JAVA_HOME=/Volumes/SamsungSSD/Android/jdk/jdk-21.0.13+9/Contents/Home
-export ANDROID_HOME=/Volumes/SamsungSSD/Android/sdk
+export JAVA_HOME="$(/usr/libexec/java_home -v 21)"   # macOS
+export ANDROID_HOME="$HOME/Library/Android/sdk"
 bash ./gradlew assembleDebug installDebug   # gradlew에 실행 권한이 없어 bash로 실행
 ```
 
