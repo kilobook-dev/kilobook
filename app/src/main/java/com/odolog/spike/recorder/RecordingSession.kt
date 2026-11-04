@@ -1,8 +1,8 @@
 package com.odolog.spike.recorder
 
 import android.content.Context
-import android.util.Log
 import androidx.annotation.MainThread
+import com.odolog.spike.AppLog
 import com.odolog.spike.data.OdologDatabase
 import com.odolog.spike.vehicle.Capability
 import com.odolog.spike.vehicle.DashboardState
@@ -95,6 +95,6 @@ class RecordingSession(
     )
 
     private fun log(message: String) {
-        Log.i(VehicleMonitor.TAG, message)
+        AppLog.i(message)
     }
 }

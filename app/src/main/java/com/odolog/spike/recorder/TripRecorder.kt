@@ -10,6 +10,7 @@ import com.odolog.spike.data.TripSource
 import com.odolog.spike.data.TripStatus
 import com.odolog.spike.vehicle.Capability
 import com.odolog.spike.vehicle.DashboardState
+import com.odolog.spike.vehicle.label
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -20,11 +21,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 sealed interface RecorderEvent {
+    /** The getCurrentDistanceDriven result when the session starts; km is null if it failed (result says why). */
+    data class Startup(val km: Double?, val result: String) : RecorderEvent
     data class Odometer(val km: Double) : RecorderEvent
     data class Signals(val signals: EndSignals) : RecorderEvent
     data object SettingsChanged : RecorderEvent
@@ -110,11 +114,15 @@ class TripRecorder(
         _status.update { it.copy(running = true) }
         scope.launch { for (event in events) handleSafely(event) }
         scope.launch {
+            // Startup checks (requirement A, rule 5) use getCurrentDistanceDriven, not the first callback:
+            // after a restart the first registerDistanceDriven callback can carry an old value.
+            val atStart = vehicle.map { it.odometerAtStart }.first { it.capability !is Capability.Checking }
+            send(RecorderEvent.Startup(atStart.value?.toKm(), atStart.capability.label()))
+            // Callback values only after the startup event, so the channel keeps them in order.
             vehicle.map { it.odometerKm.value }
                 .filterNotNull()
                 .distinctUntilChanged()
-                // Float -> shortest decimal text -> Double, so 12.3f stays 12.3
-                .collect { send(RecorderEvent.Odometer(it.toString().toDouble())) }
+                .collect { send(RecorderEvent.Odometer(it.toKm())) }
         }
         scope.launch {
             vehicle.map { it.endSignals() }.distinctUntilChanged().collect { send(RecorderEvent.Signals(it)) }
@@ -140,6 +148,7 @@ class TripRecorder(
     private suspend fun handle(event: RecorderEvent) {
         val now = clock()
         when (event) {
+            is RecorderEvent.Startup -> onStartup(event, now)
             is RecorderEvent.Odometer -> onOdometer(event.km, now)
             is RecorderEvent.Signals -> onSignals(event.signals, now)
             RecorderEvent.SettingsChanged -> {
@@ -183,17 +192,20 @@ class TripRecorder(
         }
     }
 
-    // Rules 1, 5, 6 and requirement A
-    private suspend fun onOdometer(km: Double, now: Long) {
-        if (!startupDone) {
-            startup(km, now)
-            startupDone = true
-            currentKm = km
-            saveLastKnown(km, now)
-            evaluateEnd(now)
-            scheduleIdleCheck()
-            return
+    private suspend fun onStartup(event: RecorderEvent.Startup, now: Long) {
+        startup(event.km, event.result, now)
+        startupDone = true
+        event.km?.let {
+            currentKm = it
+            saveLastKnown(it, now)
         }
+        evaluateEnd(now)
+        scheduleIdleCheck()
+    }
+
+    // Rules 1, 6
+    private suspend fun onOdometer(km: Double, now: Long) {
+        if (!startupDone) return // not sent before Startup; kept as a guard
 
         val previous = currentKm
         if (previous != null && km > previous + EPSILON) {
@@ -224,14 +236,14 @@ class TripRecorder(
         scheduleIdleCheck()
     }
 
-    /** First odometer value after the recorder starts (app start). */
-    private suspend fun startup(km: Double, now: Long) {
+    /** Session start (app start, service start, boot): requirement A and rule 5 against getCurrentDistanceDriven. */
+    private suspend fun startup(km: Double?, result: String, now: Long) {
         val state = appState.get()
         savedKm = state?.lastKnownOdometer
         val lastKm = state?.lastKnownOdometer
         val lastAt = state?.lastKnownAt
-        decide("시작: 현재 $km km, 마지막 기록 ${lastKm?.let { "$it km" } ?: "없음"}")
-        if (lastKm != null && km < lastKm - EPSILON) {
+        decide("시작: getCurrentDistanceDriven ${km?.let { "$it km" } ?: "없음 ($result)"}, 마지막 기록 ${lastKm?.let { "$it km" } ?: "없음"}")
+        if (km != null && lastKm != null && km < lastKm - EPSILON) {
             // Only at startup: a lower value becomes the new baseline (e.g. the emulator odometer reset to 0 on reboot).
             decide("시작 값($km km)이 마지막 기록($lastKm km)보다 작음. 현재 값을 새 기준으로 사용")
         }
@@ -247,6 +259,11 @@ class TripRecorder(
                 decide("열린 주행 #${open.id} 이어서 기록 (마지막 확인 ${(now - lastAt) / 1000}초 전)")
                 return
             }
+        }
+        if (km == null) {
+            // No start value: skip gap detection rather than guess from a callback value. The first callback becomes the baseline.
+            decide("누락 감지 건너뜀: 시작 기준 값 없음 ($result)")
+            return
         }
         detectGap(km, now)
     }
@@ -372,3 +389,6 @@ class TripRecorder(
         private const val EPSILON = 1e-6
     }
 }
+
+/** Float -> shortest decimal text -> Double, so 12.3f stays 12.3 instead of 12.30000019. */
+private fun Float.toKm(): Double = toString().toDouble()

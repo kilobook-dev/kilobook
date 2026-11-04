@@ -1,7 +1,7 @@
 package com.odolog.spike.vehicle
 
 import android.content.Context
-import android.util.Log
+import com.odolog.spike.AppLog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,10 +28,6 @@ class VehicleMonitor(context: Context) {
     }
 
     private fun log(message: String) {
-        Log.i(TAG, message)
-    }
-
-    companion object {
-        const val TAG = "OdologSpike"
+        AppLog.i(message)
     }
 }

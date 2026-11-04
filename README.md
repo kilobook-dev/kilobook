@@ -30,9 +30,10 @@ Android Studio에서는 Settings › Build Tools › Gradle › Gradle JDK를 JD
 ```
 app/src/main/java/com/odolog/spike/
 ├── OdologApp.kt               Application: DB, 설정, 기록 세션을 한 곳에서 만듦
+├── AppLog.kt                  logcat과 화면 디버그 로그에 함께 남기는 로그 (최근 300건, 연속 중복은 묶음)
 ├── MainActivity.kt            Compose 화면을 띄우는 단일 Activity (onStart/onStop을 ViewModel에 전달)
 ├── DashboardViewModel.kt      화면 쪽 기록 세션 소유자, 버튼 동작
-├── ui/DashboardScreen.kt      실시간 패널 + 용도 확인 카드 + 주행 기록 목록 + 디버그 설정
+├── ui/DashboardScreen.kt      실시간 패널 + 용도 확인 카드 + 주행 기록 목록 + 디버그 설정 + 디버그 로그
 ├── data/
 │   ├── Trip.kt                Trip, AppState (Room 엔티티)
 │   └── OdologDatabase.kt      Room DB와 DAO
@@ -41,7 +42,8 @@ app/src/main/java/com/odolog/spike/
 │   ├── RecordingSession.kt    화면과 서비스가 함께 쓰는 기록 세션 (소유자 수를 셈)
 │   └── RecorderSettings.kt    디버그 설정 (무변화 N분, 재시작 기준, 대체 규칙 강제, 백그라운드 기록)
 ├── service/
-│   └── RecorderService.kt     Foreground Service: 화면이 없어도 기록 세션 유지
+│   ├── RecorderService.kt     Foreground Service: 화면이 없어도 기록 세션 유지
+│   └── BootReceiver.kt        BOOT_COMPLETED 수신 시 서비스 시작 (S8), 마지막 결과 저장
 └── vehicle/
     ├── DashboardState.kt      차량 상태 (값 + Capability 결과)
     ├── VehicleMonitor.kt      두 소스를 하나의 StateFlow로 합침
@@ -54,5 +56,7 @@ app/src/main/java/com/odolog/spike/
 - [Phase 1 — 샘플 앱 연결 확인](docs/phase1-sample-app.md)
 - [Phase 2 — 실시간 값 표시](docs/phase2-live-panel.md)
 - [Phase 3 — 주행 기록과 백그라운드 기록](docs/phase3-trip-recording.md)
+- [Phase 4 — 디버그 로그와 검증 시나리오 S1~S8](docs/phase4-scenarios.md)
+- [Pleos 문의 목록](docs/pleos-questions.md)
 
 `reference/`에는 공식 샘플 앱을 받아 두며 git에 포함하지 않는다.

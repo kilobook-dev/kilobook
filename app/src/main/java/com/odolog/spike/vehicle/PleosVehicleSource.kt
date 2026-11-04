@@ -125,7 +125,10 @@ class PleosVehicleSource(
             onComplete = { config ->
                 log("checkCurrentDistanceDrivenCapabilities -> $config")
                 update { it.copy(odometerKm = it.odometerKm.copy(capability = config.toCapability())) }
-                if (config.accessType == AccessType.NONE) return@checkCurrentDistanceDrivenCapabilities
+                if (config.accessType == AccessType.NONE) {
+                    update { it.copy(odometerAtStart = it.odometerAtStart.copy(capability = config.toCapability())) }
+                    return@checkCurrentDistanceDrivenCapabilities
+                }
                 if (!active) {
                     log("checkCurrentDistanceDrivenCapabilities -> stopped, listener not registered")
                     return@checkCurrentDistanceDrivenCapabilities
@@ -134,11 +137,25 @@ class PleosVehicleSource(
                 odometer.getCurrentDistanceDriven(
                     onComplete = { km ->
                         log("getCurrentDistanceDriven -> $km")
-                        update { it.withOdometer(km, now()) }
+                        val at = now()
+                        update {
+                            it.withOdometer(km, at).copy(
+                                odometerAtStart = it.odometerAtStart.copy(
+                                    capability = if (km != null) Capability.Supported("getCurrentDistanceDriven") else Capability.Failed("값 없음 (null)"),
+                                    value = km,
+                                    updatedAtMillis = at,
+                                ),
+                            )
+                        }
                     },
                     onFailed = { e ->
                         log("getCurrentDistanceDriven -> onFailed(${sdkError(e)})")
-                        update { it.copy(odometerKm = it.odometerKm.copy(lastError = sdkError(e))) }
+                        update {
+                            it.copy(
+                                odometerKm = it.odometerKm.copy(lastError = sdkError(e)),
+                                odometerAtStart = it.odometerAtStart.copy(capability = Capability.Failed(sdkError(e))),
+                            )
+                        }
                     },
                 )
                 odometer.registerDistanceDriven(odometerListener)
@@ -146,7 +163,12 @@ class PleosVehicleSource(
             },
             onFailed = { e ->
                 log("checkCurrentDistanceDrivenCapabilities -> onFailed(${sdkError(e)})")
-                update { it.copy(odometerKm = it.odometerKm.copy(capability = e.toCapability())) }
+                update {
+                    it.copy(
+                        odometerKm = it.odometerKm.copy(capability = e.toCapability()),
+                        odometerAtStart = it.odometerAtStart.copy(capability = e.toCapability()),
+                    )
+                }
             },
         )
     }

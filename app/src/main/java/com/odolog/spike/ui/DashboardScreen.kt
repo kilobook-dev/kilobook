@@ -3,6 +3,7 @@ package com.odolog.spike.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,13 +19,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.odolog.spike.AppLog
 import com.odolog.spike.DashboardViewModel
 import com.odolog.spike.data.EndReason
 import com.odolog.spike.data.Purpose
@@ -50,6 +56,10 @@ fun DashboardScreen(viewModel: DashboardViewModel) {
     val trips by viewModel.trips.collectAsStateWithLifecycle()
     val config by viewModel.config.collectAsStateWithLifecycle()
     val owners by viewModel.owners.collectAsStateWithLifecycle()
+    val log by viewModel.log.collectAsStateWithLifecycle()
+    val bootRecord by viewModel.bootRecord.collectAsStateWithLifecycle()
+    var logOpen by rememberSaveable { mutableStateOf(false) }
+    var sdkOnly by rememberSaveable { mutableStateOf(false) }
     val now by produceState(System.currentTimeMillis()) {
         while (true) {
             delay(1_000)
@@ -106,10 +116,29 @@ fun DashboardScreen(viewModel: DashboardViewModel) {
                 owners = owners,
                 awaitingCount = awaiting.size,
                 hiddenWhileDriving = awaiting.isNotEmpty() && !recorder.vehicleStopped,
+                bootRecord = bootRecord,
                 onConfig = viewModel::updateConfig,
                 onReset = viewModel::resetRecords,
             )
         }
+
+        // Phase 4: collapsible debug log (newest first)
+        item {
+            DebugLogHeader(
+                count = log.size,
+                open = logOpen,
+                sdkOnly = sdkOnly,
+                onToggle = { logOpen = !logOpen },
+                onFilter = { sdkOnly = !sdkOnly },
+                onClear = viewModel::clearLog,
+            )
+        }
+        if (logOpen) {
+            val shown = log.asReversed().filter { !sdkOnly || !it.isAppEvent }
+            if (shown.isEmpty()) item { Text("기록된 로그가 없습니다", fontSize = 15.sp) }
+            items(shown) { entry -> LogRow(entry) }
+        }
+        item { Spacer(Modifier.height(32.dp)) }
     }
 }
 
@@ -125,7 +154,11 @@ private fun LivePanel(state: DashboardState, openTrip: Trip?, now: Long) {
         LiveRow(
             title = "총 주행거리",
             value = state.odometerKm.value?.let { "%.1f km".format(it) } ?: "—",
-            details = listOf(state.odometerKm.statusLine()),
+            details = listOf(
+                state.odometerKm.statusLine(),
+                "시작 기준값: " + (state.odometerAtStart.value?.let { "%.1f km".format(it) } ?: state.odometerAtStart.capability.label()) +
+                    " (getCurrentDistanceDriven, 누락 감지·재시작 정리에 사용)",
+            ),
         )
         LiveRow(
             title = "트립 주행거리",
@@ -288,6 +321,7 @@ private fun RecorderPanel(
     owners: Set<String>,
     awaitingCount: Int,
     hiddenWhileDriving: Boolean,
+    bootRecord: String?,
     onConfig: ((RecorderConfig) -> RecorderConfig) -> Unit,
     onReset: () -> Unit,
 ) {
@@ -306,6 +340,7 @@ private fun RecorderPanel(
             fontSize = 15.sp,
         )
         Text("마지막 판단: ${recorder.lastDecision}", fontSize = 15.sp)
+        Text("부팅 시 자동 시작(S8): ${bootRecord ?: "BOOT_COMPLETED를 받은 기록 없음"}", fontSize = 15.sp)
         Text(
             "무시한 총 주행거리 감소 값: ${recorder.ignoredDecreaseCount}회" +
                 (recorder.lastIgnoredDecrease?.let { " (마지막: $it)" } ?: ""),
@@ -329,6 +364,37 @@ private fun RecorderPanel(
             }
             SmallButton("기록 초기화", onReset)
         }
+    }
+}
+
+// ---------- Debug log (Phase 4) ----------
+
+@Composable
+private fun DebugLogHeader(
+    count: Int,
+    open: Boolean,
+    sdkOnly: Boolean,
+    onToggle: () -> Unit,
+    onFilter: () -> Unit,
+    onClear: () -> Unit,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text("디버그 로그 ${count}건 (최신순, 최근 300건)", fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(420.dp))
+        SmallButton(if (open) "접기" else "펼치기", onToggle)
+        if (open) {
+            SmallButton(if (sdkOnly) "SDK·차량 API만 보는 중" else "전체 보는 중", onFilter)
+            SmallButton("로그 지우기", onClear)
+        }
+    }
+}
+
+@Composable
+private fun LogRow(entry: AppLog.Entry) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 1.dp)) {
+        Text(logClock(entry.atMillis), fontSize = 14.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.width(140.dp))
+        Text(entry.name, fontSize = 14.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f))
+        val repeats = if (entry.count > 1) "  (×${entry.count}, 처음 ${logClock(entry.firstAtMillis)})" else ""
+        Text(entry.result + repeats, fontSize = 14.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f))
     }
 }
 
@@ -408,5 +474,6 @@ private fun elapsed(millis: Long): String {
     return "%d:%02d:%02d".format(s / 3600, (s % 3600) / 60, s % 60)
 }
 
+private fun logClock(millis: Long): String = SimpleDateFormat("HH:mm:ss.SSS", Locale.KOREA).format(Date(millis))
 private fun clock(millis: Long): String = SimpleDateFormat("HH:mm:ss", Locale.KOREA).format(Date(millis))
 private fun dateTime(millis: Long): String = SimpleDateFormat("MM/dd HH:mm", Locale.KOREA).format(Date(millis))

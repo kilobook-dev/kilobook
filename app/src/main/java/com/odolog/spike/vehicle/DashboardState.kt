@@ -38,6 +38,12 @@ data class DashboardState(
 
     // Pleos Vehicle SDK (units from the Pleos API reference)
     val odometerKm: Reading<Float> = Reading("Odometer.getCurrentDistanceDriven / registerDistanceDriven"),
+    /**
+     * The getCurrentDistanceDriven result only, kept apart from callback values.
+     * The recorder's startup checks use it, because the first registerDistanceDriven callback
+     * after a restart can carry an old value.
+     */
+    val odometerAtStart: Reading<Float> = Reading("Odometer.getCurrentDistanceDriven (시작 기준)"),
     val tripDistanceM: Reading<Float> = Reading("Odometer.getTripCurrentDrivingDistance"),
     val tripInstantDistanceM: Reading<Float> = Reading("Odometer.getTripInstantaneousDrivingDistance"),
     val tripTimeMin: Reading<Int> = Reading("Odometer.getTripCurrentDrivingTime"),
