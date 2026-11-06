@@ -2,7 +2,7 @@
 // but they are the API 34 way and this emulator runs Android 14 (API 34).
 @file:Suppress("DEPRECATION")
 
-package com.odolog.spike.vehicle
+package com.kilobook.app.vehicle
 
 import android.car.Car
 import android.car.VehiclePropertyIds

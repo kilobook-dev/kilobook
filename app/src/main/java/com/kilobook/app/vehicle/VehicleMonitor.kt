@@ -1,7 +1,7 @@
-package com.odolog.spike.vehicle
+package com.kilobook.app.vehicle
 
 import android.content.Context
-import com.odolog.spike.AppLog
+import com.kilobook.app.AppLog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

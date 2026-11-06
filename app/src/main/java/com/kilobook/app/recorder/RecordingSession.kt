@@ -1,12 +1,12 @@
-package com.odolog.spike.recorder
+package com.kilobook.app.recorder
 
 import android.content.Context
 import androidx.annotation.MainThread
-import com.odolog.spike.AppLog
-import com.odolog.spike.data.OdologDatabase
-import com.odolog.spike.vehicle.Capability
-import com.odolog.spike.vehicle.DashboardState
-import com.odolog.spike.vehicle.VehicleMonitor
+import com.kilobook.app.AppLog
+import com.kilobook.app.data.KiloBookDatabase
+import com.kilobook.app.vehicle.Capability
+import com.kilobook.app.vehicle.DashboardState
+import com.kilobook.app.vehicle.VehicleMonitor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
  */
 class RecordingSession(
     private val context: Context,
-    private val db: OdologDatabase,
+    private val db: KiloBookDatabase,
     private val settings: RecorderSettings,
 ) {
     private val owners = mutableSetOf<String>()

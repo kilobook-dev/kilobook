@@ -1,4 +1,4 @@
-package com.odolog.spike.data
+package com.kilobook.app.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

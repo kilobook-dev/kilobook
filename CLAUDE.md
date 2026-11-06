@@ -12,38 +12,34 @@
   - 1차 결과 11/23 · 2차 오프라인 PT 12/03~04 (**실제 동작 시연 필수**: 에뮬레이터 또는 기기) · 최종 10팀은 전시용 최종 APK 제출
 - **제출물**: 필수는 접수양식(기획서)과 개인정보 동의서 (사용자가 작성). 선택(가산점)은 GitHub 저장소(소스 + `apk/`), 시연 영상, 숏폼.
 
-## 2. 앱 이름 — 미정
+## 2. 앱 이름 — 킬로북 (KiloBook)
 
-> **앱 이름은 미정, 가칭 오도로그. 같은 이름의 Google Play 앱(Odolog: Mileage Tracker)이 있어 확정 전 변경 예정.**
+> **앱 이름 킬로북 확정 (기존 가칭 오도로그, 같은 이름의 해외 앱이 있어 변경).**
 
 이름이 들어가는 빌드 값은 저장소 루트 `app.properties`(UTF-8) 한 곳에서 온다.
 
 | 값 | 지금 | 쓰이는 곳 |
 |---|---|---|
-| `appName` | 오도로그 스파이크 | 런처 이름, 화면 제목, 서비스 알림 제목 (`resValue` → `R.string.app_name`) |
-| `appSlug` | odolog | 패키지 이름 `com.<appSlug>.<appIdSuffix>`, 제출 APK 파일명, 서명 인증서 `CN=<appSlug>-dev, O=<appSlug>` |
-| `appIdSuffix` | spike | 패키지 이름 마지막 부분 |
-| `teamName` | TEAMNAME | 제출 APK 파일명 `apk/<teamName>_<AppSlug>_release.apk` |
+| `appName` | 킬로북 | 런처 이름, 화면 제목, 서비스 알림 제목 (`resValue` → `R.string.app_name`) |
+| `appNameEn` | KiloBook | 제출 APK 파일명, 서명 인증서 `O=<appNameEn>` |
+| `appSlug` | kilobook | 패키지 이름 `com.<appSlug>.<appIdSuffix>`, 서명 인증서 `CN=<appSlug>-dev`, 키 파일 이름 |
+| `appIdSuffix` | app | 패키지 이름 마지막 부분 |
+| `teamName` | KiloBook | 제출 APK 파일명 `apk/<teamName>_<appNameEn>_release.apk`. 개인 참가라 팀명 자리에 앱 이름을 쓴다 (운영사무국 답변) |
 
-이름이 정해지면:
+결과: 패키지 `com.kilobook.app`, 제출 APK `apk/KiloBook_KiloBook_release.apk`, 서명 인증서 `CN=kilobook-dev, O=KiloBook`.
 
-1. `app.properties`의 값을 바꾼다. 패키지 이름이 바뀌면 에뮬레이터에는 다른 앱으로 설치된다 (기존 기록은 옮겨지지 않음).
-2. 서명 키는 인증서 이름(CN/O)이 키를 만들 때 고정되므로, **가능하면 이름을 정한 뒤** `scripts/create-release-key.sh`로 만든다.
-3. 직접 적힌 곳을 찾아 바꾼다: `git grep -n -i -E "odolog|오도로그"`. 지금 직접 적힌 곳:
-   - Kotlin 패키지 `com.odolog.spike`: 소스 폴더 `app/src/main/java/com/odolog/spike/`, 모든 `.kt`의 `package`·`import` 줄, `app/build.gradle.kts`의 `namespace`.
-     사용자에게 보이지 않는다. 바꾸려면 폴더 이동 + 패키지 선언 일괄 변경
-   - 클래스 이름 `OdologApp`(매니페스트 `android:name=".OdologApp"` 포함), `OdologDatabase`, DB 파일 이름 `odolog.db`
-     (DB 파일 이름을 바꾸면 기존 기록을 못 읽는다)
-   - logcat 태그 `OdologSpike`(`AppLog.TAG`), `settings.gradle.kts`의 `rootProject.name = "OdologSpike"`
-   - README 제목·설명·명령어, 이 문서, `apk/README.md`의 예시 파일명, `docs/pleos-questions.md` 첫 줄
-   - `docs/spike/phase4-scenarios.md`의 맨 위 안내와 명령어(패키지 이름, 로그 태그, 앱 목록 이름)
-   - `docs/spike/`의 Phase 1~4 기록은 당시 기록이라 고치지 않는다
-4. git 작성자 `odolog-dev` / `odolog-dev@users.noreply.github.com`은 **이번에는 바꾸지 않는다** (이미 커밋에 남아 있음). 새 이름이 정해지면 사용자가 따로 정한다.
+`app.properties`로 바뀌지 않고 코드에 직접 적힌 이름 (사용자에게는 보이지 않음):
+
+- Kotlin 패키지 `com.kilobook.app` = `app/build.gradle.kts`의 `namespace`, 소스 폴더 `app/src/main/java/com/kilobook/app/`
+- 클래스 `KiloBookApp`(매니페스트 `android:name=".KiloBookApp"`), `KiloBookDatabase`, DB 파일 이름 `kilobook.db`
+- logcat 태그 `KiloBook`(`AppLog.TAG`), `settings.gradle.kts`의 `rootProject.name = "KiloBook"`
+
+서명 키는 인증서 이름이 키를 만들 때 고정된다. `scripts/create-release-key.sh`가 `app.properties` 값으로 만든다.
 
 ## 3. 현재 상태
 
 - Phase 0~4(기술 검증) 완료, 태그 **`spike-v1`** = Phase 4 커밋.
-- 그 뒤: 앱 이름 설정 한 곳으로 모음(`app.properties`), release 서명·`releaseApk` 준비, 문서 `docs/spike/`로 정리, 이 문서.
+- 그 뒤: 앱 이름 설정 한 곳으로 모음(`app.properties`), release 서명·`releaseApk` 준비, 문서 `docs/spike/`로 정리, 이 문서, 앱 이름 킬로북 반영(패키지 `com.kilobook.app`).
 - 판정: **에뮬레이터에서 기술적으로 가능.** 총 주행거리로 주행을 만들고, 기어 P로 끝내고, 화면·앱이 없을 때와 부팅 직후에도 기록된다.
 
 | 시나리오 | 결과 | 요지 |
@@ -84,7 +80,7 @@
 - **화면**: 용도 버튼 높이 72dp, "주행 종료" 버튼은 확인 카드 위, 디버그 로그는 연속 중복을 한 줄로 묶음(×N).
 - **업무사용비율** = (업무 + 출퇴근) km ÷ 총 주행거리. 국세청 업무용승용차 운행기록부 기준: ⑫ 업무용 사용거리 = ⑧ 출·퇴근용 + ⑨ 일반 업무용, ⑬ 업무사용비율 = ⑫ ÷ ⑪ 총주행거리. 용도 미확인 주행은 분모에만 넣고 "미확인 X km"로 따로 보여 준다.
 - **예시 기록 버튼**: 디버그 패널 전용. 화면과 기록에 "예시"로 표시하고 한 번에 지울 수 있게 한다.
-- **제출 APK**: `apk/<teamName>_<AppSlug>_release.apk`, release 서명, R8(코드 축소) 끔. 서명 키 파일은 저장소 밖, 비밀번호는 `local.properties`(git 제외).
+- **제출 APK**: `apk/KiloBook_KiloBook_release.apk`, release 서명, R8(코드 축소) 끔. 서명 키 파일은 저장소 밖, 비밀번호는 `local.properties`(git 제외).
 - **작업 환경**: SDK를 내장 디스크로 옮기지 않고, 작업을 맥북으로 옮긴다.
 
 ## 5. 작업 규칙
@@ -97,7 +93,7 @@
 6. Phase마다 git 커밋한다. 커밋 메시지 끝에 `Co-Authored-By: Claude …` 줄을 붙인다.
 7. 범위 밖: TTS/STT, NaviHelper, Toll, 네트워크, 파일 내보내기, 디자인. (Phase 5의 큰 글씨·큰 버튼은 승인된 범위. 그 이상 꾸미지 않는다.)
 8. **블라인드 심사** (접수양식 DOCX 02 항목: 링크·첨부를 포함해 실명·계정 노출 금지):
-   - 커밋 작성자는 저장소 로컬 설정 `odolog-dev` / `odolog-dev@users.noreply.github.com`. 이 PC의 전역 git 설정은 쓰지 않는다.
+   - 커밋 작성자는 저장소 로컬 설정 `kilobook-dev` / `kilobook-dev@users.noreply.github.com`. 이 PC의 전역 git 설정은 쓰지 않는다.
    - 커밋, 파일, 문서, APK에 실명·개인 이메일·개인 계정·개인 경로(홈 폴더 경로, 기기 이름)를 넣지 않는다.
    - 서명 인증서 이름(CN/O)도 프로젝트 이름으로 만든다 (APK를 받은 누구나 볼 수 있음).
 9. 원격 저장소는 사용자가 GitHub 조직 저장소 주소를 줄 때까지 push하지 않는다.
@@ -139,19 +135,19 @@
    https://document.pleos.ai/docs/connect/guide/getting-started/application-development/setup-connect-sdk-emulator
 3. 저장소를 clone하고, **바로** 저장소 안에서:
    ```bash
-   git config user.name "odolog-dev"
-   git config user.email "odolog-dev@users.noreply.github.com"
+   git config user.name "kilobook-dev"
+   git config user.email "kilobook-dev@users.noreply.github.com"
    git config user.name && git config user.email   # 위 값이 나오는지 확인
    ```
    전역 설정에 실명·개인 이메일이 있어도 이 저장소에서는 위 값이 쓰인다. 커밋 전에 한 번 더 확인한다.
 4. Android Studio로 열면 `local.properties`(`sdk.dir`)가 생긴다. 이 파일은 git에 올라가지 않는다.
-5. 빌드·설치: `./gradlew installDebug` → `adb shell am start -n com.odolog.spike/.MainActivity`
+5. 빌드·설치: `./gradlew installDebug` → `adb shell am start -n com.kilobook.app/.MainActivity`
 6. 에뮬레이터 준비: 시간대를 한국 표준시로 (`docs/spike/phase4-scenarios.md` "시간대 설정"), `adb forward tcp:8088 tcp:8088` → http://127.0.0.1:8088 콘솔 열기 → S1로 연결 확인.
 7. 공식 샘플 앱이 필요하면 `reference/`에 받는다 (git 제외): `git clone https://github.com/Pleos-Playground/pleos-sample-vehicle-app reference/pleos-sample-vehicle-app`
-8. 서명 키 (제출 APK를 만들 때, 가능하면 이름 확정 후):
-   - `scripts/create-release-key.sh` → 키는 `~/Keys/<appSlug>/` (저장소 밖). 다른 곳에 백업 1부 (잃어버리면 다시 만들 수 없음).
+8. 서명 키 (제출 APK를 만들 때):
+   - `scripts/create-release-key.sh` → 키는 `~/Keys/kilobook/kilobook-release.jks` (저장소 밖), 인증서 `CN=kilobook-dev, O=KiloBook`. 다른 곳에 백업 1부 (잃어버리면 다시 만들 수 없음).
    - 출력된 `release.*` 4줄을 `local.properties`에 넣는다 (git 제외).
-   - `./gradlew releaseApk` → `apk/<teamName>_<AppSlug>_release.apk`
+   - `./gradlew releaseApk` → `apk/KiloBook_KiloBook_release.apk`
 
 ## 8. 에뮬레이터·콘솔 주의사항 (검증 중 알게 된 것)
 
@@ -159,7 +155,7 @@
 - 콘솔 총 주행거리는 줄일 수 없고, 에뮬레이터를 다시 켜면 0이 된다.
 - 재부팅에 `adb reboot`을 쓰지 않는다 (에뮬레이터 크래시). 창을 닫고 다시 켠다. 이 AVD는 항상 Cold Boot로 켜진다. Quick Boot(스냅샷)로는 `BOOT_COMPLETED`가 오지 않는다.
 - Android Studio Stop(■)은 강제 종료다. 그 뒤 앱을 한 번 열기 전까지는 부팅 신호를 받지 못한다.
-- Back 키로 앱이 닫히지 않는다. 창 닫기: `adb shell am stack list | grep odolog` → `adb shell am stack remove <taskId>`.
+- Back 키로 앱이 닫히지 않는다. 창 닫기: `adb shell am stack list | grep kilobook` → `adb shell am stack remove <taskId>`.
 - 운전자는 user 10이다. `BOOT_COMPLETED`는 부팅 완료 후 10초~1분 넘게 걸려 온다.
 - 재시작 직후 `registerDistanceDriven` 첫 콜백은 이전 값을 준다 (약 1초 뒤 현재 값).
 - `PARKING_BRAKE_ON`은 항상 false, `IGNITION_STATE`는 미지원, `VENDOR_GEAR_SELECTION`은 `CAR_VENDOR_EXTENSION` 권한 거부.

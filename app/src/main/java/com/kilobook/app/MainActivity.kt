@@ -1,11 +1,11 @@
-package com.odolog.spike
+package com.kilobook.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.material3.MaterialTheme
-import com.odolog.spike.ui.DashboardScreen
+import com.kilobook.app.ui.DashboardScreen
 
 class MainActivity : ComponentActivity() {
     private val viewModel: DashboardViewModel by viewModels()

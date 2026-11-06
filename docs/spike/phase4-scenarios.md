@@ -2,15 +2,14 @@
 
 확인일: 2026-11-04 / 에뮬레이터: Pleos Connect v2.1.0 (Android 14) / Vehicle SDK 2.3.2
 
-이 문서의 앱 이름·패키지·로그 태그는 지금 값 기준이다: 앱 이름 `오도로그 스파이크`, 패키지 `com.odolog.spike`, 로그 태그 `OdologSpike`.
-앱 이름은 가칭이라 바뀔 수 있다. 바뀌면 저장소 루트 `app.properties`의 값으로 바꿔 읽는다.
+이 문서의 앱 이름·패키지·로그 태그는 확정 이름 기준이다: 앱 이름 `킬로북`, 패키지 `com.kilobook.app`, 로그 태그 `KiloBook`.
 
 ## 디버그 로그
 
 화면 맨 아래 "디버그 로그 N건" → **펼치기**. 최신순, 최근 300건, 한 줄 = 시각 · 호출(또는 단계) · 결과.
 
 - "전체 보는 중" 버튼을 누르면 **SDK·차량 API만** 보도록 바뀐다 (기록 판단, 세션, 서비스, 부팅 로그를 뺀다).
-- "로그 지우기"는 화면 로그만 지운다. logcat에는 같은 내용이 남는다: `adb logcat -s OdologSpike:I`
+- "로그 지우기"는 화면 로그만 지운다. logcat에는 같은 내용이 남는다: `adb logcat -s KiloBook:I`
 - 같은 내용이 연달아 오면 한 줄로 묶는다. 결과 뒤에 `(×6, 처음 04:15:24.433)`처럼 횟수와 처음 시각이 붙고, 맨 앞 시각은 마지막으로 온 시각이다.
   총 주행거리 콜백은 값이 그대로여도 몇 초마다 다시 오기 때문이다. logcat에는 묶지 않고 모두 남는다.
 - 로그는 앱 프로세스 메모리에 있다. 앱이 강제 종료되면 비워지고, 부팅으로 서비스가 먼저 시작된 경우에는 그때부터 쌓여 있다.
@@ -30,7 +29,7 @@
 1. 에뮬레이터 `Pleos_Connect_v2.1.0`을 켠다 (Android Studio Device Manager, Cold Boot 권장).
 2. Virtual Console을 연다: 터미널에서 `adb forward tcp:8088 tcp:8088` → 브라우저에서 http://127.0.0.1:8088
 3. 처음 한 번: 시간대를 한국 표준시로 맞춘다 (아래 "시간대 설정"). 한 번 바꾸면 에뮬레이터를 다시 켜도 유지된다.
-4. 앱 목록에서 **오도로그 스파이크**를 연다 (또는 `adb shell am start -n com.odolog.spike/.MainActivity`).
+4. 앱 목록에서 **킬로북**을 연다 (또는 `adb shell am start -n com.kilobook.app/.MainActivity`).
 
 콘솔 조작
 
@@ -152,7 +151,7 @@ A. 다른 앱 뒤에 있을 때
 
 B. 앱 창을 닫았을 때 (서비스만 남음)
 
-1. 터미널: `adb shell am stack list | grep odolog` → `taskId=1000057: com.odolog.spike/com.odolog.spike.MainActivity …` 같은 줄이 나온다.
+1. 터미널: `adb shell am stack list | grep kilobook` → `taskId=1000057: com.kilobook.app/com.kilobook.app.MainActivity …` 같은 줄이 나온다.
    그 번호로 `adb shell am stack remove 1000057`. 앱 창이 사라진다.
 2. Gear Drive → Odometer +1 km → Gear Park.
 3. 앱을 다시 연다.
@@ -171,8 +170,8 @@ B. 앱 창을 닫았을 때 (서비스만 남음)
 - 설정 영역 "백그라운드 기록: 켜짐".
 
 1. 에뮬레이터 창을 닫고 Device Manager에서 다시 켠다 (Cold Boot). 부팅 후 **앱을 열지 않는다.** `adb reboot`은 쓰지 않는다 (위 주의사항).
-2. 1분쯤 기다린 뒤 터미널: `adb shell dumpsys activity services com.odolog.spike | grep isForeground`
-   (앱 창이 없는지도 확인: `adb shell am stack list | grep odolog` → 아무것도 안 나와야 함)
+2. 1분쯤 기다린 뒤 터미널: `adb shell dumpsys activity services com.kilobook.app | grep isForeground`
+   (앱 창이 없는지도 확인: `adb shell am stack list | grep kilobook` → 아무것도 안 나와야 함)
 3. 앱을 열지 않은 채 Gear Drive → Odometer +1 km → Gear Park.
 4. 앱을 연다.
 

@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "OdologSpike"
+rootProject.name = "KiloBook"
 include(":app")

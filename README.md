@@ -1,12 +1,11 @@
-# 오도로그 스파이크 (가칭)
+# 킬로북 (KiloBook)
 
-> 앱 이름은 아직 정하지 않았다 (가칭 "오도로그"). 같은 이름의 Google Play 앱이 있어 확정 전에 바꾼다.
 > 이름이 들어가는 빌드 값(패키지, 표시 이름, 제출 APK 파일명, 서명 인증서 이름)은 모두 [`app.properties`](app.properties) 한 곳에서 온다.
 
 Pleos Connect(Android Automotive) 차량용 앱. 차량이 직접 읽은 총 주행거리로 업무용 운행기록을 남기고,
 운전자는 주행이 끝난 뒤 용도(업무/출퇴근/개인)만 고른다. 지금은 기술 검증(`spike-v1`)을 마치고 제출용 화면(Phase 5) 전 단계다.
 
-- 패키지: `com.odolog.spike` (`app.properties`의 `appSlug`·`appIdSuffix`) · Kotlin + Jetpack Compose · minSdk 28 · 단일 Activity
+- 패키지: `com.kilobook.app` (`app.properties`의 `appSlug`·`appIdSuffix`) · Kotlin + Jetpack Compose · minSdk 28 · 단일 Activity
 - Vehicle SDK: `ai.pleos.playground:Vehicle:2.3.2`
 - 툴체인: AGP 8.8.2 · Gradle 8.10.2 · Kotlin 2.0.0 (공식 샘플 앱과 동일)
 
@@ -19,13 +18,13 @@ export JAVA_HOME="$(/usr/libexec/java_home -v 21)"   # macOS. 다른 OS는 JDK 2
 export ANDROID_HOME="$HOME/Library/Android/sdk"     # Android Studio 기본 SDK 위치
 
 ./gradlew installDebug
-$ANDROID_HOME/platform-tools/adb shell am start -n com.odolog.spike/.MainActivity
+$ANDROID_HOME/platform-tools/adb shell am start -n com.kilobook.app/.MainActivity
 ```
 
 `local.properties`(git 제외)에 `sdk.dir`을 적어두면 `ANDROID_HOME` 없이도 된다.
 Android Studio에서는 Settings › Build Tools › Gradle › Gradle JDK를 JDK 17/21로 맞춘다.
 
-로그 보기: `adb logcat -s OdologSpike:I`
+로그 보기: `adb logcat -s KiloBook:I`
 
 테스트 환경(Pleos Connect Emulator v2.1.0, Virtual Console 조작, 시간대 설정)과 시나리오 S1~S8: [docs/spike/phase4-scenarios.md](docs/spike/phase4-scenarios.md)
 
@@ -33,7 +32,7 @@ Android Studio에서는 Settings › Build Tools › Gradle › Gradle JDK를 JD
 
 ```bash
 scripts/create-release-key.sh   # 처음 한 번: 저장소 밖에 서명 키 생성, local.properties에 넣을 줄 출력
-./gradlew releaseApk            # apk/TEAMNAME_Odolog_release.apk (이름은 app.properties의 teamName·appSlug)
+./gradlew releaseApk            # apk/KiloBook_KiloBook_release.apk (이름은 app.properties의 teamName·appNameEn)
 ```
 
 서명 값이 없으면 `releaseApk`는 빌드 전에 멈춘다. 자세한 내용은 [apk/README.md](apk/README.md).
@@ -41,18 +40,18 @@ scripts/create-release-key.sh   # 처음 한 번: 저장소 밖에 서명 키 �
 ## 구조
 
 ```
-app.properties                 앱 이름 설정 (appName, appSlug, appIdSuffix, teamName)
+app.properties                 앱 이름 설정 (appName, appNameEn, appSlug, appIdSuffix, teamName)
 scripts/create-release-key.sh  release 서명 키 생성 (저장소 밖)
 apk/                           제출용 release APK 위치
-app/src/main/java/com/odolog/spike/
-├── OdologApp.kt               Application: DB, 설정, 기록 세션을 한 곳에서 만듦
+app/src/main/java/com/kilobook/app/
+├── KiloBookApp.kt             Application: DB, 설정, 기록 세션을 한 곳에서 만듦
 ├── AppLog.kt                  logcat과 화면 디버그 로그에 함께 남기는 로그 (최근 300건, 연속 중복은 묶음)
 ├── MainActivity.kt            Compose 화면을 띄우는 단일 Activity (onStart/onStop을 ViewModel에 전달)
 ├── DashboardViewModel.kt      화면 쪽 기록 세션 소유자, 버튼 동작
 ├── ui/DashboardScreen.kt      실시간 패널 + 용도 확인 카드 + 주행 기록 목록 + 디버그 설정 + 디버그 로그
 ├── data/
 │   ├── Trip.kt                Trip, AppState (Room 엔티티)
-│   └── OdologDatabase.kt      Room DB와 DAO
+│   └── KiloBookDatabase.kt    Room DB와 DAO
 ├── recorder/
 │   ├── TripRecorder.kt        주행 기록 규칙 1~6, 재시작 시 열린 Trip 정리
 │   ├── RecordingSession.kt    화면과 서비스가 함께 쓰는 기록 세션 (소유자 수를 셈)

@@ -1,4 +1,4 @@
-package com.odolog.spike.vehicle
+package com.kilobook.app.vehicle
 
 import ai.pleos.playground.vehicle.Vehicle
 import ai.pleos.playground.vehicle.api.Odometer

@@ -1,6 +1,6 @@
 # Pleos 문의 목록
 
-기술 검증 앱(가칭 오도로그, Pleos Connect v2.1.0 에뮬레이터, Vehicle SDK 2.3.2)을 만들며 문서로 확인하지 못한 것.
+기술 검증 앱(킬로북, Pleos Connect v2.1.0 에뮬레이터, Vehicle SDK 2.3.2)을 만들며 문서로 확인하지 못한 것.
 각 항목: 지금 한 것 → 궁금한 것.
 
 ## 1. DO(Distraction Optimization) 선언 배포 허용

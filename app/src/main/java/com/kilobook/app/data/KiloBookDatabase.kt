@@ -1,4 +1,4 @@
-package com.odolog.spike.data
+package com.kilobook.app.data
 
 import android.content.Context
 import androidx.room.Dao
@@ -45,12 +45,12 @@ interface AppStateDao {
 }
 
 @Database(entities = [Trip::class, AppState::class], version = 1, exportSchema = false)
-abstract class OdologDatabase : RoomDatabase() {
+abstract class KiloBookDatabase : RoomDatabase() {
     abstract fun tripDao(): TripDao
     abstract fun appStateDao(): AppStateDao
 
     companion object {
-        fun create(context: Context): OdologDatabase =
-            Room.databaseBuilder(context.applicationContext, OdologDatabase::class.java, "odolog.db").build()
+        fun create(context: Context): KiloBookDatabase =
+            Room.databaseBuilder(context.applicationContext, KiloBookDatabase::class.java, "kilobook.db").build()
     }
 }

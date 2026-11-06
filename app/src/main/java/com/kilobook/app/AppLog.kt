@@ -1,4 +1,4 @@
-package com.odolog.spike
+package com.kilobook.app
 
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -7,11 +7,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 /**
- * One log for the whole process: goes to logcat (tag OdologSpike) and to the on-screen debug log.
+ * One log for the whole process: goes to logcat (tag KiloBook) and to the on-screen debug log.
  * Kept in memory only, so it covers what happened since the process started (e.g. a boot start).
  */
 object AppLog {
-    const val TAG = "OdologSpike"
+    const val TAG = "KiloBook"
     private const val MAX_ENTRIES = 300
 
     /**

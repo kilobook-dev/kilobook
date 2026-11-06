@@ -1,4 +1,4 @@
-package com.odolog.spike.service
+package com.kilobook.app.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -11,11 +11,11 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
-import com.odolog.spike.AppLog
-import com.odolog.spike.MainActivity
-import com.odolog.spike.R
-import com.odolog.spike.graph
-import com.odolog.spike.vehicle.describe
+import com.kilobook.app.AppLog
+import com.kilobook.app.MainActivity
+import com.kilobook.app.R
+import com.kilobook.app.graph
+import com.kilobook.app.vehicle.describe
 
 /**
  * Keeps trip recording alive while the screen is not visible (navigation in front, app window closed).

@@ -1,13 +1,16 @@
 #!/bin/bash
 # Creates the release signing key OUTSIDE the repository. The certificate name comes from app.properties:
-#   CN=<appSlug>-dev, O=<appSlug>   (anyone with the APK can read it, so never a real name)
+#   CN=<appSlug>-dev, O=<appNameEn>   (anyone with the APK can read it, so never a real name)
 # Usage: scripts/create-release-key.sh            (keytool asks for the passwords)
 #        KEY_DIR=/other/dir scripts/create-release-key.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-slug=$(grep -E '^appSlug=' app.properties | cut -d= -f2- | tr -d '[:space:]')
+prop() { grep -E "^$1=" app.properties | cut -d= -f2- | tr -d '[:space:]'; }
+slug=$(prop appSlug)
+org=$(prop appNameEn)
 [ -n "$slug" ] || { echo "app.properties: appSlug is empty" >&2; exit 1; }
+[ -n "$org" ] || { echo "app.properties: appNameEn is empty" >&2; exit 1; }
 
 dir="${KEY_DIR:-$HOME/Keys/$slug}"
 store="$dir/$slug-release.jks"
@@ -18,7 +21,7 @@ esac
 
 mkdir -p "$dir"
 "${JAVA_HOME:+$JAVA_HOME/bin/}keytool" -genkeypair -v -keystore "$store" -alias release \
-  -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=$slug-dev, O=$slug" "$@"
+  -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=$slug-dev, O=$org" "$@"
 
 cat <<EOT
 

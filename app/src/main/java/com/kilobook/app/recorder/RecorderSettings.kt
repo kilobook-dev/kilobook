@@ -1,4 +1,4 @@
-package com.odolog.spike.recorder
+package com.kilobook.app.recorder
 
 import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -1,4 +1,4 @@
-package com.odolog.spike.vehicle
+package com.kilobook.app.vehicle
 
 /**
  * Whether an API works on this vehicle. Shown on screen as-is:

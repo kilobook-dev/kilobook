@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-// Every build value that carries the app name comes from app.properties at the repo root (UTF-8; the name is tentative).
+// Every build value that carries the app name comes from app.properties at the repo root (UTF-8).
 val appProps = Properties().apply {
     rootProject.file("app.properties").reader(Charsets.UTF_8).use { load(it) }
 }
@@ -15,10 +15,11 @@ fun appProp(key: String): String =
     appProps.getProperty(key)?.trim()?.takeIf { it.isNotEmpty() } ?: throw GradleException("app.properties: $key is missing")
 
 val appName = appProp("appName")
+val appNameEn = appProp("appNameEn")
 val appSlug = appProp("appSlug")
 val appIdSuffix = appProp("appIdSuffix")
 val teamName = appProp("teamName")
-val releaseApkName = "${teamName}_${appSlug.replaceFirstChar { it.uppercase() }}_release.apk"
+val releaseApkName = "${teamName}_${appNameEn}_release.apk"
 
 // Release signing values: local.properties (git-ignored) or -P. The key file itself stays outside the repo.
 val localProps = Properties().apply {
@@ -29,8 +30,8 @@ val releaseStoreFile = signingProp("release.storeFile")
 val hasReleaseSigning = releaseStoreFile != null
 
 android {
-    // Kotlin package of the source code (not shown to users). Renaming it means moving the source folders.
-    namespace = "com.odolog.spike"
+    // Kotlin package of the source code (not shown to users). Kept equal to applicationId; renaming it means moving the source folders.
+    namespace = "com.kilobook.app"
     compileSdk = 35
 
     defaultConfig {
@@ -93,7 +94,7 @@ dependencies {
     implementation(libs.androidx.material3)
 }
 
-// ./gradlew releaseApk -> signed release APK copied to apk/<teamName>_<AppSlug>_release.apk (the submission file).
+// ./gradlew releaseApk -> signed release APK copied to apk/<teamName>_<appNameEn>_release.apk (the submission file).
 tasks.register<Copy>("releaseApk") {
     group = "submission"
     description = "Builds the signed release APK and copies it to apk/$releaseApkName"

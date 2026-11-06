@@ -1,17 +1,17 @@
-package com.odolog.spike
+package com.kilobook.app
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.odolog.spike.data.Purpose
-import com.odolog.spike.data.Trip
-import com.odolog.spike.recorder.RecorderConfig
-import com.odolog.spike.recorder.RecorderEvent
-import com.odolog.spike.recorder.RecorderStatus
-import com.odolog.spike.service.BootRecord
-import com.odolog.spike.service.RecorderService
-import com.odolog.spike.vehicle.DashboardState
-import com.odolog.spike.vehicle.describe
+import com.kilobook.app.data.Purpose
+import com.kilobook.app.data.Trip
+import com.kilobook.app.recorder.RecorderConfig
+import com.kilobook.app.recorder.RecorderEvent
+import com.kilobook.app.recorder.RecorderStatus
+import com.kilobook.app.service.BootRecord
+import com.kilobook.app.service.RecorderService
+import com.kilobook.app.vehicle.DashboardState
+import com.kilobook.app.vehicle.describe
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

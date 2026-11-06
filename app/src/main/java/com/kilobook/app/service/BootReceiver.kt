@@ -1,12 +1,12 @@
-package com.odolog.spike.service
+package com.kilobook.app.service
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Process
-import com.odolog.spike.AppLog
-import com.odolog.spike.graph
-import com.odolog.spike.vehicle.describe
+import com.kilobook.app.AppLog
+import com.kilobook.app.graph
+import com.kilobook.app.vehicle.describe
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
