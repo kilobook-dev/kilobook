@@ -66,10 +66,24 @@ app/src/main/java/com/kilobook/app/
     └── CarStandardSource.kt   AAOS 표준 API (CarPropertyManager, CarUxRestrictionsManager)
 ```
 
+## 오픈소스 라이선스
+
+이 앱은 아래 오픈소스 라이브러리를 쓴다. 모두 **Apache License 2.0**이다 (https://www.apache.org/licenses/LICENSE-2.0).
+
+- AndroidX, Jetpack Compose (Material 3 포함), Room
+- Kotlin Standard Library, Kotlin Reflect, kotlinx.coroutines, kotlinx.serialization, JetBrains Java Annotations
+- Dagger·Hilt, Gson, Guava ListenableFuture, JSR 305 Annotations, javax.inject, JSpecify
+
+Pleos Vehicle SDK는 오픈소스가 아니며 Pleos Playground 이용약관을 따른다.
+라이브러리별 버전과 라이선스 전체 목록(109개)은 [docs/open-source-licenses.md](docs/open-source-licenses.md). 앱 설정 화면 표기는 Phase 5에서 넣는다.
+
 ## 문서
 
 - [CLAUDE.md](CLAUDE.md) — 인수인계: 현재 상태, 확정된 결정, 작업 규칙, 남은 일, 새 PC 세팅 순서
 - [스파이크 기록 (Phase 1~4, 시나리오 S1~S8)](docs/spike/README.md)
+- [권한 점검](docs/permissions.md) — 선언한 권한과 보호 수준 (Normal·Dangerous만 사용)
+- [오픈소스 라이선스](docs/open-source-licenses.md)
+- [TTS/STT 동작 확인과 계획](docs/speech-check.md)
 - [Pleos 문의 목록](docs/pleos-questions.md)
 
 `reference/`에는 공식 샘플 앱을 받아 두며 git에 포함하지 않는다.

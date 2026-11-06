@@ -26,6 +26,7 @@
 
 - Pleos "앱 구조 및 동작 모델": 백그라운드 작업은 실행 조건과 중단·재개 정책을 정의하고, 상주·타이머·폴링을 최소화하라고 한다.
 - 이 앱의 정책: 차량 리스너만 사용 (폴링 없음), 타이머는 대체 규칙의 1회성 무변화 판정 하나. 설정에서 백그라운드 기록을 끌 수 있다.
+- 공모전 운영사무국 답변 (2026-11-06): 화면 없는 Foreground Service가 주행 중 차량 신호를 받을 수 있다. 아래 한도·설정·전원 정책은 아직 모른다.
 - 궁금한 것:
   - 상주 서비스의 허용 조건이나 한도 (CPU, 메모리, 실행 시간)가 있는가?
   - 사용자에게 켜고 끄는 설정을 반드시 제공해야 하는가?
@@ -60,3 +61,6 @@
 - 트립 API (`getTripCurrentDrivingDistance`, `getTripCurrentDrivingTime`)가 에뮬레이터에서 `ERROR_NOT_SUPPORTED_PROPERTY`다. 실제 차량에서는 지원되는가?
 - 앱을 강제 종료한 뒤 다시 실행하면 `registerDistanceDriven` 첫 콜백이 종료 전 값을 준다 (현재 값은 약 1초 뒤). 의도된 동작인가?
 - Virtual Console에 주차 브레이크(`PARKING_BRAKE_ON`) 조작이 없다. 추가 계획이 있는가?
+- Android 표준 `TextToSpeech`가 에뮬레이터에서 엔진을 찾지 못하고(`getEngines()` 빈 목록, `onInit` ERROR), `SpeechRecognizer`는 콜백이 오지 않는다.
+  Pleos 차량에서는 Pleos TTS/STT SDK만 쓰는 것이 맞는가? ([speech-check.md](speech-check.md))
+- Pleos STT `ON_DEVICE`: 앱을 강제 종료·삭제해도 음성 서비스(`ai.pleos.playground.caas`)가 그 앱의 인식 작업을 계속했다 (에뮬레이터 재시작으로 멈춤). 의도된 동작인가?

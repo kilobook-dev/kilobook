@@ -39,7 +39,8 @@
 ## 3. 현재 상태
 
 - Phase 0~4(기술 검증) 완료, 태그 **`spike-v1`** = Phase 4 커밋.
-- 그 뒤: 앱 이름 설정 한 곳으로 모음(`app.properties`), release 서명·`releaseApk` 준비, 문서 `docs/spike/`로 정리, 이 문서, 앱 이름 킬로북 반영(패키지 `com.kilobook.app`).
+- 그 뒤: 앱 이름 설정 한 곳으로 모음(`app.properties`), release 서명·`releaseApk` 준비, 문서 `docs/spike/`로 정리, 이 문서, 앱 이름 킬로북 반영(패키지 `com.kilobook.app`),
+  운영사무국 답변 반영(권한 점검, 오픈소스 라이선스 목록, TTS/STT 동작 확인).
 - 판정: **에뮬레이터에서 기술적으로 가능.** 총 주행거리로 주행을 만들고, 기어 P로 끝내고, 화면·앱이 없을 때와 부팅 직후에도 기록된다.
 
 | 시나리오 | 결과 | 요지 |
@@ -83,6 +84,20 @@
 - **제출 APK**: `apk/KiloBook_KiloBook_release.apk`, release 서명, R8(코드 축소) 끔. 서명 키 파일은 저장소 밖, 비밀번호는 `local.properties`(git 제외).
 - **작업 환경**: SDK를 내장 디스크로 옮기지 않고, 작업을 맥북으로 옮긴다.
 
+**운영사무국 확인 (2026-11-06)**
+
+- **화면 없는 Foreground Service가 주행 중 차량 신호를 받을 수 있다** (운영 측 확인). 이 앱의 S7 B·S8 결과와 같다.
+- **권한**: Android 표준 API는 Normal·Dangerous 권한만 쓸 수 있고, signature·privileged 권한은 쓸 수 없다.
+  점검 결과는 `docs/permissions.md`. 걸리는 것은 `CAR_VENDOR_EXTENSION`(signature|privileged, 디버그 비교 표시용) 하나다. 삭제는 승인 대기 중이다.
+- **공모전 자료**는 Pleos Playground 공개 문서가 전부이고, 공개 API 외에는 제공되지 않는다.
+- 개인 참가자는 제출 APK 파일명의 팀명 자리에 앱 이름을 써도 된다 → `KiloBook_KiloBook_release.apk`.
+
+**TTS/STT와 라이선스**
+
+- **TTS/STT**: Pleos SDK 3.3.1 `ON_DEVICE`가 에뮬레이터에서 동작한다 (TTS 재생 확인, STT 엔진 응답). Android 표준 `TextToSpeech`·`SpeechRecognizer`는 동작하지 않는다.
+  구현은 Phase 5 이후 승인 받고 한다. 결과와 계획은 `docs/speech-check.md`.
+- **오픈소스 라이선스**: 목록은 `docs/open-source-licenses.md`, README "오픈소스 라이선스" 절. 앱 설정 화면 표기는 Phase 5 (5-10). 라이브러리가 바뀌면 목록을 다시 만든다.
+
 ## 5. 작업 규칙
 
 1. **Phase 단위**로 진행한다. Phase가 끝나면 멈추고 보고한 뒤 승인을 받고 다음으로 간다.
@@ -91,16 +106,20 @@
 4. SDK가 Unsupported·null·오류를 주면 우회 코드로 덮지 않는다. 그 결과를 화면과 보고에 그대로 남긴다.
 5. 새 Android 개념마다 iOS/SwiftUI 대응을 2~3줄로 설명한다.
 6. Phase마다 git 커밋한다. 커밋 메시지 끝에 `Co-Authored-By: Claude …` 줄을 붙인다.
-7. 범위 밖: TTS/STT, NaviHelper, Toll, 네트워크, 파일 내보내기, 디자인. (Phase 5의 큰 글씨·큰 버튼은 승인된 범위. 그 이상 꾸미지 않는다.)
-8. **블라인드 심사** (접수양식 DOCX 02 항목: 링크·첨부를 포함해 실명·계정 노출 금지):
+7. 범위 밖: TTS/STT, NaviHelper, Toll, 네트워크, 파일 내보내기, 디자인. (Phase 5의 큰 글씨·큰 버튼은 승인된 범위. 그 이상 꾸미지 않는다. TTS/STT는 확인과 계획만 했고, 구현은 Phase 5 이후 따로 승인 받는다.)
+8. 권한은 Normal·Dangerous만 쓴다. 새 권한을 넣을 때는 에뮬레이터에서 `adb shell pm list permissions -g -f`로 `protectionLevel`을 확인하고 `docs/permissions.md`에 적는다.
+9. **블라인드 심사** (접수양식 DOCX 02 항목: 링크·첨부를 포함해 실명·계정 노출 금지):
    - 커밋 작성자는 저장소 로컬 설정 `kilobook-dev` / `kilobook-dev@users.noreply.github.com`. 이 PC의 전역 git 설정은 쓰지 않는다.
    - 커밋, 파일, 문서, APK에 실명·개인 이메일·개인 계정·개인 경로(홈 폴더 경로, 기기 이름)를 넣지 않는다.
    - 서명 인증서 이름(CN/O)도 프로젝트 이름으로 만든다 (APK를 받은 누구나 볼 수 있음).
-9. 원격 저장소는 사용자가 GitHub 조직 저장소 주소를 줄 때까지 push하지 않는다.
+10. 원격 저장소는 사용자가 GitHub 조직 저장소 주소를 줄 때까지 push하지 않는다.
 
 ## 6. 남은 일
 
-**바로 다음**: 사용자가 원격 저장소 주소를 주면 `main`과 태그(`spike-v1`)를 push한다.
+**바로 다음**
+
+- 권한 정리 (승인 대기): `CAR_VENDOR_EXTENSION` 선언과 벤더 기어 비교 표시 삭제 (`docs/permissions.md` 2절, 약 0.3시간).
+- 사용자가 원격 저장소 주소를 주면 `main`과 태그(`spike-v1`)를 push한다.
 
 **Phase 5 — 제출용 MVP 화면** (착수 승인됨, 맥북에서 시작)
 
@@ -116,6 +135,7 @@
 | 5-7 | 주행 중 동작 | 카드 숨김, "기록 중 · 이번 주행 X km"만 표시 | 0.5시간 |
 | 5-8 | 예시 기록 버튼 | 디버그 패널 전용, "예시" 표시, 한 번에 지우기 | 0.5시간 |
 | 5-9 | 검증·문서 | S1~S8 다시 실행 + 새 화면 시나리오, 화면 캡처, `docs/phase5` | 2시간 |
+| 5-10 | 오픈소스 라이선스 | 설정에 "오픈소스 라이선스": `docs/open-source-licenses.md`의 표기용 목록 + Apache 2.0 전문 | 0.5시간 |
 
 **제출 준비** (코드 변경은 Phase 5 이후)
 
@@ -174,10 +194,16 @@
 | Foreground Service | 직접 대응 없음. 백그라운드 모드(위치·오디오)로 계속 실행하는 것에 가까움 |
 | BroadcastReceiver + `BOOT_COMPLETED` | 직접 대응 없음. 시스템이 앱을 깨우는 백그라운드 실행(BGTaskScheduler 등)에 가까움 |
 | Gradle, `app.properties` → `resValue` | Xcode 빌드 설정, `.xcconfig` → Info.plist 값 |
+| 권한 보호 수준 normal / dangerous / signature·privileged | normal ≈ 선언만 하면 되는 기능, dangerous ≈ 사용자 동의 팝업(카메라·마이크), signature·privileged ≈ Apple이 승인해야 받는 entitlement |
+| `TextToSpeech` / `SpeechRecognizer` (Pleos SDK도 같은 역할) | `AVSpeechSynthesizer` / `SFSpeechRecognizer` |
+| 오픈소스 라이선스 목록 화면 | 설정 앱의 Acknowledgements(Settings.bundle) 또는 앱 안 "라이선스" 화면 |
 
 ## 10. 문서 위치
 
 - `README.md` — 빌드·설치, 구조
 - `docs/spike/` — Phase 1~4 기록과 시나리오 S1~S8 (`phase4-scenarios.md`는 회귀 테스트 안내로 계속 쓴다)
+- `docs/permissions.md` — 권한 점검 (protectionLevel, 운영 기준 Normal·Dangerous만)
+- `docs/open-source-licenses.md` — 오픈소스 라이선스 (설정 화면 표기용 목록 + 라이브러리별 부록)
+- `docs/speech-check.md` — TTS/STT 동작 확인과 계획
 - `docs/pleos-questions.md` — Pleos 문의 목록 (DO 배포, specialUse, 상주 서비스 기준, 알림, 부팅 자동 시작)
 - `apk/README.md` — 제출 APK 규칙
