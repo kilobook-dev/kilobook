@@ -60,8 +60,6 @@ class CarStandardSource(
                 { it.gearSelection }, { s, r -> s.copy(gearSelection = r) })
             watchProperty(pm, VehiclePropertyIds.CURRENT_GEAR, "CURRENT_GEAR", ::asInt,
                 { it.currentGear }, { s, r -> s.copy(currentGear = r) })
-            watchProperty(pm, VENDOR_GEAR_SELECTION, "VENDOR_GEAR_SELECTION", ::asInt,
-                { it.vendorGear }, { s, r -> s.copy(vendorGear = r) })
             watchProperty(pm, VehiclePropertyIds.PARKING_BRAKE_ON, "PARKING_BRAKE_ON", ::asBoolean,
                 { it.parkingBrake }, { s, r -> s.copy(parkingBrake = r) })
             watchProperty(pm, VehiclePropertyIds.IGNITION_STATE, "IGNITION_STATE", ::asInt,
@@ -218,11 +216,6 @@ class CarStandardSource(
         }
         uxManager = null
         propertyManager = null
-    }
-
-    companion object {
-        /** Hyundai vendor gear property the Virtual Console publishes (from its /vehicle/catalog). */
-        const val VENDOR_GEAR_SELECTION = 0x21400400
     }
 }
 

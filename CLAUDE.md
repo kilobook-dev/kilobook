@@ -40,7 +40,8 @@
 
 - Phase 0~4(기술 검증) 완료, 태그 **`spike-v1`** = Phase 4 커밋.
 - 그 뒤: 앱 이름 설정 한 곳으로 모음(`app.properties`), release 서명·`releaseApk` 준비, 문서 `docs/spike/`로 정리, 이 문서, 앱 이름 킬로북 반영(패키지 `com.kilobook.app`),
-  운영사무국 답변 반영(권한 점검, 오픈소스 라이선스 목록, TTS/STT 동작 확인).
+  운영사무국 답변 반영(권한 점검, 오픈소스 라이선스 목록, TTS/STT 동작 확인), `CAR_VENDOR_EXTENSION` 권한 삭제,
+  이전 커밋 작성자를 `kilobook-dev`로 다시 씀(`spike-v1`도 새 Phase 4 커밋에 다시 닮).
 - 판정: **에뮬레이터에서 기술적으로 가능.** 총 주행거리로 주행을 만들고, 기어 P로 끝내고, 화면·앱이 없을 때와 부팅 직후에도 기록된다.
 
 | 시나리오 | 결과 | 요지 |
@@ -88,7 +89,7 @@
 
 - **화면 없는 Foreground Service가 주행 중 차량 신호를 받을 수 있다** (운영 측 확인). 이 앱의 S7 B·S8 결과와 같다.
 - **권한**: Android 표준 API는 Normal·Dangerous 권한만 쓸 수 있고, signature·privileged 권한은 쓸 수 없다.
-  점검 결과는 `docs/permissions.md`. 걸리는 것은 `CAR_VENDOR_EXTENSION`(signature|privileged, 디버그 비교 표시용) 하나다. 삭제는 승인 대기 중이다.
+  점검 결과는 `docs/permissions.md`. 걸리던 `CAR_VENDOR_EXTENSION`(signature|privileged, 디버그 비교 표시용)은 삭제했다 (2026-11-09). 지금 7개 모두 Normal이다.
 - **공모전 자료**는 Pleos Playground 공개 문서가 전부이고, 공개 API 외에는 제공되지 않는다.
 - 개인 참가자는 제출 APK 파일명의 팀명 자리에 앱 이름을 써도 된다 → `KiloBook_KiloBook_release.apk`.
 
@@ -109,7 +110,7 @@
 7. 범위 밖: TTS/STT, NaviHelper, Toll, 네트워크, 파일 내보내기, 디자인. (Phase 5의 큰 글씨·큰 버튼은 승인된 범위. 그 이상 꾸미지 않는다. TTS/STT는 확인과 계획만 했고, 구현은 Phase 5 이후 따로 승인 받는다.)
 8. 권한은 Normal·Dangerous만 쓴다. 새 권한을 넣을 때는 에뮬레이터에서 `adb shell pm list permissions -g -f`로 `protectionLevel`을 확인하고 `docs/permissions.md`에 적는다.
 9. **블라인드 심사** (접수양식 DOCX 02 항목: 링크·첨부를 포함해 실명·계정 노출 금지):
-   - 커밋 작성자는 저장소 로컬 설정 `kilobook-dev` / `kilobook-dev@users.noreply.github.com`. 이 PC의 전역 git 설정은 쓰지 않는다.
+   - 커밋 작성자는 저장소 로컬 설정 `kilobook-dev` / `kilobook-dev@users.noreply.github.com`. 이 PC의 전역 git 설정은 쓰지 않는다. 이전 커밋도 모두 이 이름으로 바꿨다 (2026-11-09).
    - 커밋, 파일, 문서, APK에 실명·개인 이메일·개인 계정·개인 경로(홈 폴더 경로, 기기 이름)를 넣지 않는다.
    - 서명 인증서 이름(CN/O)도 프로젝트 이름으로 만든다 (APK를 받은 누구나 볼 수 있음).
 10. 원격 저장소는 사용자가 GitHub 조직 저장소 주소를 줄 때까지 push하지 않는다.
@@ -118,7 +119,6 @@
 
 **바로 다음**
 
-- 권한 정리 (승인 대기): `CAR_VENDOR_EXTENSION` 선언과 벤더 기어 비교 표시 삭제 (`docs/permissions.md` 2절, 약 0.3시간).
 - 사용자가 원격 저장소 주소를 주면 `main`과 태그(`spike-v1`)를 push한다.
 
 **Phase 5 — 제출용 MVP 화면** (착수 승인됨, 맥북에서 시작)
@@ -178,7 +178,7 @@
 - Back 키로 앱이 닫히지 않는다. 창 닫기: `adb shell am stack list | grep kilobook` → `adb shell am stack remove <taskId>`.
 - 운전자는 user 10이다. `BOOT_COMPLETED`는 부팅 완료 후 10초~1분 넘게 걸려 온다.
 - 재시작 직후 `registerDistanceDriven` 첫 콜백은 이전 값을 준다 (약 1초 뒤 현재 값).
-- `PARKING_BRAKE_ON`은 항상 false, `IGNITION_STATE`는 미지원, `VENDOR_GEAR_SELECTION`은 `CAR_VENDOR_EXTENSION` 권한 거부.
+- `PARKING_BRAKE_ON`은 항상 false, `IGNITION_STATE`는 미지원, `VENDOR_GEAR_SELECTION`은 `CAR_VENDOR_EXTENSION`(signature) 권한 거부 (그 뒤 권한과 읽기 코드 삭제).
 
 ## 9. iOS 비유 (지금까지 나온 개념)
 

@@ -52,7 +52,6 @@ data class DashboardState(
     // AAOS standard APIs
     val gearSelection: Reading<Int> = Reading("CarPropertyManager · GEAR_SELECTION"),
     val currentGear: Reading<Int> = Reading("CarPropertyManager · CURRENT_GEAR"),
-    val vendorGear: Reading<Int> = Reading("CarPropertyManager · VENDOR_GEAR_SELECTION (0x21400400)"),
     val parkingBrake: Reading<Boolean> = Reading("CarPropertyManager · PARKING_BRAKE_ON"),
     val ignition: Reading<Int> = Reading("CarPropertyManager · IGNITION_STATE"),
     val uxRestrictions: Reading<UxState> = Reading("CarUxRestrictionsManager"),

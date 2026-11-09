@@ -183,7 +183,6 @@ private fun LivePanel(state: DashboardState, openTrip: Trip?, now: Long) {
             details = listOf(
                 state.gearSelection.statusLine(),
                 "비교 · CURRENT_GEAR: ${state.currentGear.value?.let(::gearName) ?: state.currentGear.capability.label()}" +
-                    " · VENDOR: ${state.vendorGear.value?.let(::gearName) ?: state.vendorGear.capability.label()}" +
                     " · Pleos Gear(deprecated): ${state.pleosGear.value ?: state.pleosGear.capability.label()}",
             ),
         )

@@ -1,6 +1,6 @@
 # 권한 점검
 
-확인일: 2026-11-06 / 에뮬레이터: Pleos Connect v2.1.0 (Android 14) / 앱 `com.kilobook.app` 디버그 빌드
+확인일: 2026-11-06, `CAR_VENDOR_EXTENSION` 삭제 후 2026-11-09 다시 확인 / 에뮬레이터: Pleos Connect v2.1.0 (Android 14) / 앱 `com.kilobook.app` 디버그 빌드
 
 운영사무국 기준: **Android 표준 API는 Normal·Dangerous 권한만 쓸 수 있다. signature·privileged 권한은 쓸 수 없다.**
 
@@ -11,13 +11,12 @@
 - 부여 결과: `adb shell dumpsys package com.kilobook.app | grep granted=`
 - Pleos SDK가 요구하는 권한: SDK 클래스의 `@RequiresPermission` (`javap -v`로 확인)
 
-## 1. 앱에 들어간 권한 (8개)
+## 1. 앱에 들어간 권한 (7개)
 
 | 권한 | 들어온 곳 | 정의한 패키지 | protectionLevel | 부여 | 쓰는 기능 | 판정 |
 |---|---|---|---|---|---|---|
 | `pleos.car.permission.CAR_DRIVE` | 앱 매니페스트 | ai.pleos.playground.service.vehicle | normal | 예 | Pleos Odometer(총 주행거리), Pleos Gear(기어, deprecated). 두 API의 `@RequiresPermission` | 사용 가능 |
 | `android.car.permission.CAR_POWERTRAIN` | 앱 매니페스트 | com.android.car.updatable | normal | 예 | `GEAR_SELECTION`, `CURRENT_GEAR`, `PARKING_BRAKE_ON`, `IGNITION_STATE` (기어 P로 주행 종료) | 사용 가능 |
-| `android.car.permission.CAR_VENDOR_EXTENSION` | 앱 매니페스트 | com.android.car.updatable | **signature\|privileged** | 아니오 | `VENDOR_GEAR_SELECTION`(0x21400400) 비교 표시 (디버그 화면 한 줄). 기록 판단에는 쓰지 않음 | **기준 위반 → 삭제 제안 (2절)** |
 | `android.permission.FOREGROUND_SERVICE` | 앱 매니페스트 | android | normal\|instant | 예 | 백그라운드 기록 서비스 | 사용 가능 |
 | `android.permission.FOREGROUND_SERVICE_SPECIAL_USE` | 앱 매니페스트 | android | normal\|appop\|instant | 예 | 서비스 유형 `specialUse` | 사용 가능 (기본 수준 normal. `appop`은 시스템 설정으로 끌 수 있다는 표시) |
 | `android.permission.RECEIVE_BOOT_COMPLETED` | 앱 매니페스트 | android | normal | 예 | 부팅 시 자동 시작 (S8) | 사용 가능 |
@@ -26,14 +25,16 @@
 
 권한 없이 쓰는 API: `CarUxRestrictionsManager`(주행 규제)는 권한 선언 없이 동작한다 (에뮬레이터에서 `registerListener` 성공 확인).
 
-## 2. signature·privileged 권한: `CAR_VENDOR_EXTENSION`
+## 2. 삭제한 권한: `CAR_VENDOR_EXTENSION` (signature|privileged)
 
-- **필요한 기능**: 없다. Phase 2에서 Virtual Console이 보내는 벤더 기어 값을 표준 `GEAR_SELECTION`과 비교해 보려고 넣었다. 거부될 것을 알고 그 결과를 기록하려고 선언한 것이다 (매니페스트 주석).
-- **기어 판단은 이미 normal 권한으로 한다**: `GEAR_SELECTION`(`CAR_POWERTRAIN`), Pleos Gear(`CAR_DRIVE`).
-- **제안 (코드 수정은 승인 후)**:
-  1. `app/src/main/AndroidManifest.xml`에서 `CAR_VENDOR_EXTENSION` 선언과 주석 삭제
-  2. `vehicle/CarStandardSource.kt`의 `VENDOR_GEAR_SELECTION` 구독과 상수, `vehicle/DashboardState.kt`의 `vendorGear`, `ui/DashboardScreen.kt` 기어 줄의 "VENDOR: …" 표시 삭제
-  3. 영향: 기록 규칙은 바뀌지 않는다. 디버그 화면 기어 줄에서 비교 값 하나가 빠진다. "권한 거부됨" 결과는 `docs/spike/` 기록에 남아 있다.
+- **쓰던 곳**: Phase 2에서 Virtual Console이 보내는 벤더 기어 값 `VENDOR_GEAR_SELECTION`(0x21400400)을 표준 `GEAR_SELECTION`과 비교해 보려고 넣었다.
+  거부될 것을 알고 그 결과를 기록하려고 선언했고, 기록 판단에는 쓰지 않았다. 권한은 부여되지 않았다 (`granted` 없음).
+- **삭제 (2026-11-09)**: `app/src/main/AndroidManifest.xml`의 선언과 주석, `vehicle/CarStandardSource.kt`의 `VENDOR_GEAR_SELECTION` 구독과 상수,
+  `vehicle/DashboardState.kt`의 `vendorGear`, `ui/DashboardScreen.kt` 기어 줄의 "VENDOR: …" 표시.
+- **삭제 후 확인**: `aapt2 dump permissions` 결과 7개 (이 권한 없음), 7개 모두 `granted=true`.
+  앱 실행 시 `GEAR_SELECTION`·`CURRENT_GEAR` = 4(P), Pleos Gear = `GEAR_PARK`로 기어 판단은 전과 같다. 디버그 화면 기어 줄의 비교 값은 `CURRENT_GEAR`, Pleos Gear 두 개가 남았다.
+  "권한 거부됨" 결과는 `docs/spike/` 기록에 남아 있다.
+- **기어는 normal 권한으로 읽는다**: `GEAR_SELECTION`(`CAR_POWERTRAIN`), Pleos Gear(`CAR_DRIVE`).
 - **실제 차량에서 기어를 못 읽을 때의 대체 (이미 있는 규칙 2)**: 주행 규제(CarUxRestrictions, 권한 불필요)로 주행/정차를 보고,
   총 주행거리 N분 무변화 → `ODOMETER_IDLE` 또는 "주행 종료" 버튼 → `MANUAL_BUTTON`으로 끝낸다.
 

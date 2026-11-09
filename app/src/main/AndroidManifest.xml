@@ -7,10 +7,6 @@
     <!-- AAOS standard: GEAR_SELECTION, CURRENT_GEAR, PARKING_BRAKE_ON, IGNITION_STATE (protection level normal) -->
     <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
 
-    <!-- AAOS vendor property VENDOR_GEAR_SELECTION (0x21400400), which the Virtual Console publishes.
-         This permission is signature|privileged, so it is expected to be denied. Declared only to record the result. -->
-    <uses-permission android:name="android.car.permission.CAR_VENDOR_EXTENSION" />
-
     <!-- Background recording (Phase 3 B). specialUse: no standard type fits "observe vehicle odometer".
          The production type needs confirmation from Pleos. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
