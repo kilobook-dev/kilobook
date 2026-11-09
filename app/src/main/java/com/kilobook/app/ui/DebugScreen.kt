@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -30,12 +29,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.ui.res.stringResource
 import com.kilobook.app.AppLog
-import com.kilobook.app.R
 import com.kilobook.app.DashboardViewModel
 import com.kilobook.app.data.EndReason
 import com.kilobook.app.data.Purpose
+import com.kilobook.app.data.SampleTrips
 import com.kilobook.app.data.Trip
 import com.kilobook.app.data.TripSource
 import com.kilobook.app.data.TripStatus
@@ -49,10 +47,13 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val BUTTON_HEIGHT = 72.dp
-
+/**
+ * Debug panel (shown when 설정 › 디버그 패널 보기 is on): live vehicle values with each API's result,
+ * recorder state and settings, example trips (5-8), every trip with its raw fields, and the debug log.
+ * A developer tool, so it keeps the Phase 2–4 layout and smaller text.
+ */
 @Composable
-fun DashboardScreen(viewModel: DashboardViewModel) {
+fun DebugScreen(viewModel: DashboardViewModel) {
     val vehicle by viewModel.vehicle.collectAsStateWithLifecycle()
     val recorder by viewModel.recorder.collectAsStateWithLifecycle()
     val trips by viewModel.trips.collectAsStateWithLifecycle()
@@ -71,45 +72,13 @@ fun DashboardScreen(viewModel: DashboardViewModel) {
 
     val openTrip = trips.firstOrNull { it.status == TripStatus.OPEN }
     val awaiting = trips.filter { it.status == TripStatus.AWAITING_PURPOSE }
-    // Rule 4: ask only while stopped, and skip trips answered "나중에" until the next opportunity.
-    val toAsk = if (recorder.vehicleStopped) awaiting.filter { it.id !in recorder.snoozedTripIds } else emptyList()
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        item {
-            Text(
-                stringResource(R.string.app_name),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 16.dp),
-            )
-        }
+        item { Spacer(Modifier.height(6.dp)) }
         item { LivePanel(vehicle, openTrip, now) }
-
-        if (recorder.fallbackActive && openTrip != null) {
-            item {
-                Button(
-                    onClick = viewModel::endTripManually,
-                    modifier = Modifier.fillMaxWidth().height(BUTTON_HEIGHT),
-                ) { Text("주행 종료", fontSize = 26.sp) }
-            }
-        }
-
-        if (toAsk.isNotEmpty()) {
-            item {
-                AwaitingCard(
-                    trips = toAsk,
-                    onPurpose = viewModel::choosePurpose,
-                    onLater = viewModel::later,
-                )
-            }
-        }
-
-        item { Text("주행 기록 ${trips.size}건 (최신순)", fontSize = 20.sp, fontWeight = FontWeight.Bold) }
-        if (trips.isEmpty()) item { Text("아직 기록이 없습니다", fontSize = 16.sp) }
-        items(trips, key = { it.id }) { trip -> TripRow(trip, vehicle.odometerKm.value?.toDouble()) }
 
         item {
             RecorderPanel(
@@ -123,6 +92,18 @@ fun DashboardScreen(viewModel: DashboardViewModel) {
                 onReset = viewModel::resetRecords,
             )
         }
+
+        item {
+            SamplePanel(
+                sampleCount = trips.count { it.isSample },
+                onAdd = viewModel::addSampleTrips,
+                onClear = viewModel::clearSampleTrips,
+            )
+        }
+
+        item { Text("주행 기록 ${trips.size}건 (최신순, 디버그 상세)", fontSize = 20.sp, fontWeight = FontWeight.Bold) }
+        if (trips.isEmpty()) item { Text("아직 기록이 없습니다", fontSize = 16.sp) }
+        items(trips, key = { it.id }) { trip -> TripRow(trip, vehicle.odometerKm.value?.toDouble()) }
 
         // Phase 4: collapsible debug log (newest first)
         item {
@@ -233,48 +214,21 @@ private fun LiveRow(title: String, value: String, details: List<String>, appValu
     }
 }
 
-// ---------- Purpose card (rules 3 and 4) ----------
+// ---------- Example trips (5-8) ----------
 
 @Composable
-private fun AwaitingCard(
-    trips: List<Trip>,
-    onPurpose: (Long, Purpose) -> Unit,
-    onLater: (Long) -> Unit,
-) {
-    Surface(
-        color = MaterialTheme.colorScheme.primaryContainer,
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("용도 확인이 필요한 주행 ${trips.size}건", fontSize = 26.sp, fontWeight = FontWeight.Bold)
-            trips.forEach { trip ->
-                Text(tripSummary(trip), fontSize = 20.sp)
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                    PurposeButton("업무", Modifier.weight(1f)) { onPurpose(trip.id, Purpose.BUSINESS) }
-                    PurposeButton("출퇴근", Modifier.weight(1f)) { onPurpose(trip.id, Purpose.COMMUTE) }
-                    PurposeButton("개인", Modifier.weight(1f)) { onPurpose(trip.id, Purpose.PERSONAL) }
-                    OutlinedButton(
-                        onClick = { onLater(trip.id) },
-                        modifier = Modifier.weight(1f).height(BUTTON_HEIGHT),
-                    ) { Text("나중에", fontSize = 22.sp) }
-                }
-            }
+private fun SamplePanel(sampleCount: Int, onAdd: () -> Unit, onClear: () -> Unit) {
+    Panel {
+        Text("예시 기록 (5-8)", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(
+            "이번 달에 예시 주행 ${SampleTrips.count}건(용도 확인 대기 2건 포함)을 넣습니다. 화면과 기록에 '예시'로 표시되고, " +
+                "이번 달 요약에도 더해집니다. 실제 기록은 지우지 않습니다. 지금 예시 기록: ${sampleCount}건",
+            fontSize = 15.sp,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            SmallButton("예시 기록 넣기", onAdd)
+            SmallButton("예시 기록 모두 지우기", onClear)
         }
-    }
-}
-
-@Composable
-private fun PurposeButton(label: String, modifier: Modifier, onClick: () -> Unit) {
-    Button(onClick = onClick, modifier = modifier.height(BUTTON_HEIGHT)) { Text(label, fontSize = 22.sp) }
-}
-
-private fun tripSummary(trip: Trip): String {
-    val km = trip.distanceKm(null)?.let { "%.1f km".format(it) } ?: "—"
-    return if (trip.source == TripSource.GAP) {
-        "기록되지 않은 주행 $km · ${dateTime(trip.startTime)} ~ ${trip.endTime?.let(::dateTime) ?: "?"} 사이"
-    } else {
-        "${dateTime(trip.startTime)} ~ ${trip.endTime?.let(::clock) ?: "?"} · $km"
     }
 }
 
@@ -286,6 +240,7 @@ private fun TripRow(trip: Trip, currentKm: Double?) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Badge(statusLabel(trip.status))
             if (trip.source == TripSource.GAP) Badge("기록되지 않은 주행")
+            if (trip.isSample) Badge("예시")
             Text(
                 "#${trip.id}  ${dateTime(trip.startTime)} ~ ${trip.endTime?.let(::clock) ?: "진행 중"}",
                 fontSize = 18.sp,

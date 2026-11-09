@@ -1,5 +1,6 @@
 package com.kilobook.app.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -32,6 +33,8 @@ data class Trip(
     val askCount: Int = 0,
     val lastAskedAt: Long? = null,
     val endReason: EndReason? = null,
+    /** Example trip from the debug panel (5-8). Shown as "예시" and deleted together. Added in DB version 2. */
+    @ColumnInfo(defaultValue = "0") val isSample: Boolean = false,
 ) {
     fun distanceKm(currentOdometer: Double?): Double? =
         (endOdometer ?: currentOdometer)?.let { it - startOdometer }

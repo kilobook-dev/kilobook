@@ -16,6 +16,9 @@ Gradle 캐시에 있는 각 라이브러리 POM의 `<licenses>`를 읽었다 (PO
 Phase 5 설정 화면의 "오픈소스 라이선스" 항목은 아래 표와 Apache License 2.0 전문 한 부를 보여 준다.
 Apache 2.0은 배포할 때 받는 사람에게 라이선스 사본을 주도록 한다 (4(a)항). 전문은 https://www.apache.org/licenses/LICENSE-2.0.txt 를 앱 리소스로 넣는다.
 
+구현 (2026-11-09): 목록은 `app/src/main/java/com/kilobook/app/ui/LicensesScreen.kt`, 전문은 `app/src/main/assets/licenses/LICENSE-2.0.txt`
+(apache.org 원문, SHA-256 `cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30`). 아래 표를 바꾸면 `LicensesScreen.kt`도 함께 고친다.
+
 | 표시 이름 | 버전 | 라이선스 | 링크 |
 |---|---|---|---|
 | AndroidX (Activity, Annotation, Arch Core, Autofill, Collection, Concurrent, Core, CustomView, Emoji2, Fragment, Graphics, Interpolator, Lifecycle, Loader, ProfileInstaller, Room, SavedState, SQLite, Startup, Tracing, VersionedParcelable, ViewPager) | 라이브러리별 (부록) | Apache License 2.0 | https://developer.android.com/jetpack/androidx |

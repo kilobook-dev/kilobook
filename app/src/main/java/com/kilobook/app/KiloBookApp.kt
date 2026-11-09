@@ -14,6 +14,7 @@ class KiloBookApp : Application() {
 class AppGraph(context: Context) {
     val db = KiloBookDatabase.create(context)
     val settings = RecorderSettings(context)
+    val display = DisplaySettings(context)
     val session = RecordingSession(context, db, settings)
 }
 

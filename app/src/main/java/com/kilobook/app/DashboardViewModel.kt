@@ -4,10 +4,12 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.kilobook.app.data.Purpose
+import com.kilobook.app.data.SampleTrips
 import com.kilobook.app.data.Trip
 import com.kilobook.app.recorder.RecorderConfig
 import com.kilobook.app.recorder.RecorderEvent
 import com.kilobook.app.recorder.RecorderStatus
+import com.kilobook.app.recorder.endSignals
 import com.kilobook.app.service.BootRecord
 import com.kilobook.app.service.RecorderService
 import com.kilobook.app.vehicle.DashboardState
@@ -16,7 +18,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import java.time.ZoneId
 
 /**
  * The screen's view of the shared recording session.
@@ -33,6 +39,16 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     val trips: StateFlow<List<Trip>> = graph.db.tripDao().observeAll()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val log: StateFlow<List<AppLog.Entry>> = AppLog.entries
+    val showDebugPanel: StateFlow<Boolean> = graph.display.showDebugPanel
+
+    /**
+     * Driving = driving restriction active, or gear readable and not P (the recorder's rule 4 signal).
+     * Unknown signals count as not driving; the purpose card still waits for a "stopped" signal.
+     */
+    val driving: StateFlow<Boolean> = session.vehicle
+        .map { it.endSignals().driving }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     private val _bootRecord = MutableStateFlow(BootRecord.last(application))
     /** Last BOOT_COMPLETED handling (S8), saved by BootReceiver. */
@@ -59,6 +75,25 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     fun endTripManually() = session.send(RecorderEvent.ManualEnd)
     fun resetRecords() = session.send(RecorderEvent.Reset)
     fun clearLog() = AppLog.clear()
+
+    fun setShowDebugPanel(show: Boolean) = graph.display.setShowDebugPanel(show)
+
+    /** 5-8: example trips for this month, marked "예시". */
+    fun addSampleTrips() {
+        viewModelScope.launch {
+            val samples = SampleTrips.build(System.currentTimeMillis(), ZoneId.systemDefault())
+            graph.db.tripDao().insertAll(samples)
+            AppLog.i("Samples: 예시 기록 ${samples.size}건 추가")
+        }
+    }
+
+    /** 5-8: removes every example trip at once; recorded trips stay. */
+    fun clearSampleTrips() {
+        viewModelScope.launch {
+            val deleted = graph.db.tripDao().deleteSamples()
+            AppLog.i("Samples: 예시 기록 ${deleted}건 삭제")
+        }
+    }
 
     fun updateConfig(change: (RecorderConfig) -> RecorderConfig) {
         val before = config.value.backgroundService

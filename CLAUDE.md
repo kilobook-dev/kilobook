@@ -43,6 +43,9 @@
   운영사무국 답변 반영(권한 점검, 오픈소스 라이선스 목록, TTS/STT 동작 확인), `CAR_VENDOR_EXTENSION` 권한 삭제,
   이전 커밋 작성자를 `kilobook-dev`로 다시 씀(`spike-v1`도 새 Phase 4 커밋에 다시 닮).
 - 판정: **에뮬레이터에서 기술적으로 가능.** 총 주행거리로 주행을 만들고, 기어 P로 끝내고, 화면·앱이 없을 때와 부팅 직후에도 기록된다.
+- **Phase 5(제출용 MVP 화면) 완료 (2026-11-09, 맥북).** 홈 / 기록 / 설정 / 디버그 탭, 정차 시 한 건씩 묻는 용도 카드, 주행 중 화면, 이번 달 요약,
+  예시 기록, 오픈소스 라이선스 화면. 기록 규칙은 바꾸지 않았다. DB 버전 2(`isSample` 열, 1→2 마이그레이션). S1~S8 다시 통과.
+  결과·캡처: `docs/phase5/README.md`.
 
 | 시나리오 | 결과 | 요지 |
 |---|---|---|
@@ -79,7 +82,13 @@
 - **부팅 자동 시작**: `service/BootReceiver.kt`가 `BOOT_COMPLETED`를 받아 서비스 시작 (설정에서 백그라운드 기록이 켜져 있을 때만). 실제 차량이 Suspend-to-RAM에서 깨어날 때도 오는지는 미확인 → "앱을 열 때 누락분 정리"를 보완 경로로 유지 (Pleos 문의 5번).
 - **DO 선언 위치**: `app/src/main/AndroidManifest.xml`의 `<activity android:name=".MainActivity">` 안
   `<meta-data android:name="distractionOptimized" android:value="true" />`. 주행 중에도 화면은 유지하되 카드는 숨긴다.
-- **화면**: 용도 버튼 높이 72dp, "주행 종료" 버튼은 확인 카드 위, 디버그 로그는 연속 중복을 한 줄로 묶음(×N).
+- **화면** (Phase 5): 탭 홈 / 기록 / 설정, 디버그 탭은 설정 › 디버그 패널 보기(기본 꺼짐, 저장)로만 보인다.
+  주행 중에는 "● 기록 중 · 이번 주행 X km"만 보이고 기록·설정 탭이 숨는다 (디버그 탭은 켜져 있으면 남음).
+  용도 카드는 최신부터 한 건씩, 카드 하나에 한 번만 답하고 새 카드가 뜬 뒤 0.5초는 누름 무시. "주행 종료" 버튼은 확인 카드 위.
+  디버그 로그는 연속 중복을 한 줄로 묶음(×N).
+- **크기 기준** (`ui/theme/KiloTheme.kt`, Pleos 디자인 가이드 2026-11-09 확인): 글자 Headline 60/48, Title 40/32, Body 26, Label 24/20 (운전자 화면 최소 20).
+  버튼 높이 Large 100(용도·주행 종료) / Medium 80(탭·목록·설정). Pleos·Android 차량 문서에 최소 터치 크기 수치는 없다.
+- **예시 기록**: 디버그 탭에서만 넣고 지운다 (7건, `isSample`). 홈·목록·요약에 "예시"로 표시된다. 제출 시연 전에 지울지 정한다.
 - **업무사용비율** = (업무 + 출퇴근) km ÷ 총 주행거리. 국세청 업무용승용차 운행기록부 기준: ⑫ 업무용 사용거리 = ⑧ 출·퇴근용 + ⑨ 일반 업무용, ⑬ 업무사용비율 = ⑫ ÷ ⑪ 총주행거리. 용도 미확인 주행은 분모에만 넣고 "미확인 X km"로 따로 보여 준다.
 - **예시 기록 버튼**: 디버그 패널 전용. 화면과 기록에 "예시"로 표시하고 한 번에 지울 수 있게 한다.
 - **제출 APK**: `apk/KiloBook_KiloBook_release.apk`, release 서명, R8(코드 축소) 끔. 서명 키 파일은 저장소 밖, 비밀번호는 `local.properties`(git 제외).
@@ -121,9 +130,10 @@
 
 **바로 다음**
 
-- 맥북으로 옮기기: 7절 순서대로 SSH 키 등록 → clone → 저장소 로컬 git 설정.
+- ~~맥북으로 옮기기~~ (2026-11-09 완료). 7절과 실제 절차가 다른 점(별칭을 config 맨 위에, `AddKeysToAgent no`, git 훅 등)은 승인 받고 7절에 반영한다.
+- 제출 준비 (아래). Phase 5는 끝났다.
 
-**Phase 5 — 제출용 MVP 화면** (착수 승인됨, 맥북에서 시작)
+**Phase 5 — 제출용 MVP 화면** (2026-11-09 완료, 결과 `docs/phase5/README.md`)
 
 | # | 작업 | 내용 | 예상 |
 |---|---|---|---|
@@ -141,6 +151,7 @@
 
 **제출 준비** (코드 변경은 Phase 5 이후)
 
+- `versionName`이 아직 `0.1.0-spike`다 (설정 › 앱 정보에 보임). 제출 APK 전에 바꿀지 정한다.
 - 서명 키 만들기(`scripts/create-release-key.sh`) → `./gradlew releaseApk` → Cold Boot한 에뮬레이터에 새로 설치해 S1·S3·S4·S8 확인 → `apksigner verify --print-certs`로 인증서 이름 확인.
 - README를 공모전 필수 4항목으로 다시 쓴다: 앱 이름 및 한 줄 소개 / 실행 방법 / 테스트 환경 및 필요한 설정(Pleos Connect Emulator v2.1.0, Virtual Console 조작법, 시간대) / APK 파일 위치.
 - 시연 영상 (에뮬레이터 시간대 한국 표준시로 맞춘 뒤).
@@ -209,11 +220,19 @@
 | 권한 보호 수준 normal / dangerous / signature·privileged | normal ≈ 선언만 하면 되는 기능, dangerous ≈ 사용자 동의 팝업(카메라·마이크), signature·privileged ≈ Apple이 승인해야 받는 entitlement |
 | `TextToSpeech` / `SpeechRecognizer` (Pleos SDK도 같은 역할) | `AVSpeechSynthesizer` / `SFSpeechRecognizer` |
 | 오픈소스 라이선스 목록 화면 | 설정 앱의 Acknowledgements(Settings.bundle) 또는 앱 안 "라이선스" 화면 |
+| Room `Migration(1, 2)` (`ALTER TABLE`) | Core Data 경량 마이그레이션 / SwiftData `SchemaMigrationPlan`의 단계 하나 |
+| `LazyColumn` / `verticalScroll` | `List`·`LazyVStack` / `ScrollView` |
+| `BoxWithConstraints` (폭에 따라 4칸·2×2) | `GeometryReader` 또는 `ViewThatFits` |
+| `produceState` (1분마다 이번 달 다시 계산) | `.task { }` 안의 반복 + `@State` |
+| `BackHandler` | 내비게이션 스택의 뒤로 가기를 가로채는 것 (`NavigationStack` 경로 pop) |
+| `assets/` 폴더 (라이선스 전문) | 앱 번들 리소스 (`Bundle.main.url(forResource:)`) |
+| `Modifier.toggleable` (줄 전체를 스위치로) | `Toggle`을 `Button` 스타일 줄 전체에 붙인 것 |
 
 ## 10. 문서 위치
 
 - `README.md` — 빌드·설치, 구조
-- `docs/spike/` — Phase 1~4 기록과 시나리오 S1~S8 (`phase4-scenarios.md`는 회귀 테스트 안내로 계속 쓴다)
+- `docs/phase5/` — Phase 5 화면 구조, Pleos 크기 기준, 시험 결과(S1~S8 + 새 화면 N1~N12), 캡처
+- `docs/spike/` — Phase 1~4 기록과 시나리오 S1~S8 (`phase4-scenarios.md`는 회귀 테스트 안내로 계속 쓴다. 맨 위에 Phase 5 화면 위치)
 - `docs/permissions.md` — 권한 점검 (protectionLevel, 운영 기준 Normal·Dangerous만)
 - `docs/open-source-licenses.md` — 오픈소스 라이선스 (설정 화면 표기용 목록 + 라이브러리별 부록)
 - `docs/speech-check.md` — TTS/STT 동작 확인과 계획

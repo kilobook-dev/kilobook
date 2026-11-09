@@ -4,8 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.material3.MaterialTheme
-import com.kilobook.app.ui.DashboardScreen
+import com.kilobook.app.ui.MainScreen
+import com.kilobook.app.ui.theme.KiloTheme
 
 class MainActivity : ComponentActivity() {
     private val viewModel: DashboardViewModel by viewModels()
@@ -13,8 +13,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
-                DashboardScreen(viewModel)
+            KiloTheme {
+                MainScreen(viewModel)
             }
         }
     }
