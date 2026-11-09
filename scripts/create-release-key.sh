@@ -26,10 +26,11 @@ mkdir -p "$dir"
 cat <<EOT
 
 Created: $store
-Add these lines to local.properties (git-ignored) with the passwords you just typed:
-release.storeFile=$store
-release.storePassword=
-release.keyAlias=release
-release.keyPassword=
+Add the signing values to ~/.gradle/gradle.properties (outside the repo). See apk/README.md for a way
+that keeps the password out of the shell history:
+kilobook.release.storeFile=$store
+kilobook.release.keyAlias=release
+kilobook.release.storePassword=<the password you just typed>
+kilobook.release.keyPassword=<the same password; PKCS12 keystores use one password>
 Keep one backup copy of the .jks somewhere other than this computer (a lost key cannot be recreated).
 EOT

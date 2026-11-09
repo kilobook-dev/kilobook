@@ -247,5 +247,5 @@ B. 앱 창을 닫았을 때 (서비스만 남음)
 
 - `adb reboot`으로 에뮬레이터가 크래시했다 (macOS 크래시 리포트 `qemu-system-aarch64-2026-11-04-211656.ips`, `EglContext::~EglContext` SIGSEGV).
   재부팅 직전에 호스트와 에뮬레이터 모두 `sync`를 해 두어 기록은 사라지지 않았다.
-- 외장 SSD가 작업 중 강제 추출되어, 설치해 둔 Phase 4 빌드와 APK가 디스크에 남지 않았다 (에뮬레이터에는 Phase 3 앱이 남아 있었음).
+- 작업 디스크가 작업 중 분리되어, 설치해 둔 Phase 4 빌드와 APK가 디스크에 남지 않았다 (에뮬레이터에는 Phase 3 앱이 남아 있었음).
   다시 빌드·설치한 뒤 매번 `sync`와 `adb shell sync`를 한다.

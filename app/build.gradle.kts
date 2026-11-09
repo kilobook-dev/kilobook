@@ -21,12 +21,21 @@ val appIdSuffix = appProp("appIdSuffix")
 val teamName = appProp("teamName")
 val releaseApkName = "${teamName}_${appNameEn}_release.apk"
 
-// Release signing values: local.properties (git-ignored) or -P. The key file itself stays outside the repo.
+// Release signing values, first found wins:
+//   1. Gradle property kilobook.release.* (~/.gradle/gradle.properties, outside the repo; the prefix keeps other projects from reading them)
+//   2. Gradle property release.* (-P on the command line)
+//   3. release.* in local.properties (git-ignored)
+// The key file itself stays outside the repo. storeFile may start with "~/".
 val localProps = Properties().apply {
     rootProject.file("local.properties").takeIf { it.isFile }?.reader(Charsets.UTF_8)?.use { load(it) }
 }
-fun signingProp(key: String): String? = providers.gradleProperty(key).orNull ?: localProps.getProperty(key)
-val releaseStoreFile = signingProp("release.storeFile")
+fun signingProp(key: String): String? =
+    providers.gradleProperty("kilobook.$key").orNull
+        ?: providers.gradleProperty(key).orNull
+        ?: localProps.getProperty(key)
+val releaseStoreFile = signingProp("release.storeFile")?.trim()?.let {
+    if (it.startsWith("~/")) System.getProperty("user.home") + it.substring(1) else it
+}
 val hasReleaseSigning = releaseStoreFile != null
 
 android {
@@ -39,7 +48,7 @@ android {
         minSdk = 28
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0-spike"
+        versionName = "1.0.0"
         resValue("string", "app_name", appName)
     }
 
@@ -108,8 +117,8 @@ tasks.register<Copy>("releaseApk") {
 gradle.taskGraph.whenReady {
     if (hasTask(":app:releaseApk") && !hasReleaseSigning) {
         throw GradleException(
-            "Release signing is not set: add release.storeFile, release.storePassword, release.keyAlias, " +
-                "release.keyPassword to local.properties (scripts/create-release-key.sh prints them).",
+            "Release signing is not set: add kilobook.release.storeFile, kilobook.release.storePassword, " +
+                "kilobook.release.keyAlias, kilobook.release.keyPassword to ~/.gradle/gradle.properties (see apk/README.md).",
         )
     }
 }

@@ -1,0 +1,20 @@
+#!/bin/sh
+# KiloBook: push 전에 원격 주소, 작성자 이메일, 공동 작성자 줄을 확인한다.
+ok="354364919+kilobook-dev@users.noreply.github.com"
+case "$2" in
+  *github-kilobook:kilobook-dev/*) ;;
+  *) echo "pre-push: 원격 주소가 github-kilobook 별칭이 아닙니다: $2" >&2; exit 1 ;;
+esac
+zero=0000000000000000000000000000000000000000
+while read -r lref lsha rref rsha; do
+  [ "$lsha" = "$zero" ] && continue
+  if [ "$rsha" = "$zero" ]; then range="$lsha"; else range="$rsha..$lsha"; fi
+  bad=$(git log --format='%ae%n%ce' "$range" | sort -u | grep -vxF "$ok")
+  if [ -n "$bad" ]; then
+    echo "pre-push: 허용되지 않은 작성자 이메일: $bad" >&2; exit 1
+  fi
+  if git log --format=%B "$range" | grep -qiE '^co-authored-by:|noreply@anthropic\.com'; then
+    echo "pre-push: 커밋 메시지에 공동 작성자 줄이 있습니다." >&2; exit 1
+  fi
+done
+exit 0

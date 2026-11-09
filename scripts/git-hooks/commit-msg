@@ -1,0 +1,7 @@
+#!/bin/sh
+# KiloBook: 공동 작성자·Claude 표기 줄이 있는 커밋 메시지를 막는다 (CLAUDE.md 규칙 6).
+if grep -qiE '^co-authored-by:|noreply@anthropic\.com|generated with' "$1"; then
+  echo "commit-msg: 커밋 메시지에 공동 작성자/Claude 표기 줄이 있어 커밋을 막았습니다." >&2
+  exit 1
+fi
+exit 0

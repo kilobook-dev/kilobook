@@ -43,9 +43,12 @@
   운영사무국 답변 반영(권한 점검, 오픈소스 라이선스 목록, TTS/STT 동작 확인), `CAR_VENDOR_EXTENSION` 권한 삭제,
   이전 커밋 작성자를 `kilobook-dev`로 다시 씀(`spike-v1`도 새 Phase 4 커밋에 다시 닮).
 - 판정: **에뮬레이터에서 기술적으로 가능.** 총 주행거리로 주행을 만들고, 기어 P로 끝내고, 화면·앱이 없을 때와 부팅 직후에도 기록된다.
-- **Phase 5(제출용 MVP 화면) 완료 (2026-11-09, 맥북).** 홈 / 기록 / 설정 / 디버그 탭, 정차 시 한 건씩 묻는 용도 카드, 주행 중 화면, 이번 달 요약,
+- **Phase 5(제출용 MVP 화면) 완료 (2026-11-09).** 홈 / 기록 / 설정 / 디버그 탭, 정차 시 한 건씩 묻는 용도 카드, 주행 중 화면, 이번 달 요약,
   예시 기록, 오픈소스 라이선스 화면. 기록 규칙은 바꾸지 않았다. DB 버전 2(`isSample` 열, 1→2 마이그레이션). S1~S8 다시 통과.
   결과·캡처: `docs/phase5/README.md`.
+- **Phase 6(제출용 release) 완료 (2026-11-09).** 서명 키 `~/Keys/kilobook/kilobook-release.jks`(저장소 밖), 서명 값은 `~/.gradle/gradle.properties`의 `kilobook.release.*`.
+  `apk/KiloBook_KiloBook_release.apk` v1.0.0 (서명자 `CN=kilobook-dev, O=KiloBook`). Cold Boot·새 설치로 S1·S3·S4·S8 통과. README를 공모전 필수 4항목으로 다시 씀. 태그 `v1.0.0`.
+  결과: `apk/README.md` "확인 결과".
 
 | 시나리오 | 결과 | 요지 |
 |---|---|---|
@@ -92,7 +95,7 @@
 - **업무사용비율** = (업무 + 출퇴근) km ÷ 총 주행거리. 국세청 업무용승용차 운행기록부 기준: ⑫ 업무용 사용거리 = ⑧ 출·퇴근용 + ⑨ 일반 업무용, ⑬ 업무사용비율 = ⑫ ÷ ⑪ 총주행거리. 용도 미확인 주행은 분모에만 넣고 "미확인 X km"로 따로 보여 준다.
 - **예시 기록 버튼**: 디버그 패널 전용. 화면과 기록에 "예시"로 표시하고 한 번에 지울 수 있게 한다.
 - **제출 APK**: `apk/KiloBook_KiloBook_release.apk`, release 서명, R8(코드 축소) 끔. 서명 키 파일은 저장소 밖, 비밀번호는 `local.properties`(git 제외).
-- **작업 환경**: SDK를 내장 디스크로 옮기지 않고, 작업을 맥북으로 옮긴다.
+- **작업 환경**: 2026-11-09부터 다른 PC에서 GitHub 저장소를 clone해 작업한다 (7절).
 
 **운영사무국 확인 (2026-11-06)**
 
@@ -123,15 +126,15 @@
      이 PC의 전역 git 설정은 쓰지 않는다. 이전 커밋도 모두 이 이름·주소로 바꿨다 (2026-11-09).
    - 커밋, 파일, 문서, APK에 실명·개인 이메일·개인 계정·개인 경로(홈 폴더 경로, 기기 이름)를 넣지 않는다.
    - 서명 인증서 이름(CN/O)도 프로젝트 이름으로 만든다 (APK를 받은 누구나 볼 수 있음).
-10. **원격 저장소**: `origin` = `git@github-kilobook:kilobook-dev/kilobook.git` (Private). push는 `kilobook-dev` 전용 SSH 키의 별칭(`github-kilobook`, 7절 3번)으로만 한다.
+10. **원격 저장소**: `origin` = `git@github-kilobook:kilobook-dev/kilobook.git` (Private). push는 `kilobook-dev` 전용 SSH 키의 별칭(`github-kilobook`, 7절 4번)으로만 한다.
     PC의 `gh`와 기본 SSH 키는 개인 계정일 수 있으니 이 저장소에서 `gh` 명령을 쓰지 않는다. 강제 push 하지 않는다.
 
 ## 6. 남은 일
 
 **바로 다음**
 
-- ~~맥북으로 옮기기~~ (2026-11-09 완료). 7절과 실제 절차가 다른 점(별칭을 config 맨 위에, `AddKeysToAgent no`, git 훅 등)은 승인 받고 7절에 반영한다.
-- 제출 준비 (아래). Phase 5는 끝났다.
+- ~~새 PC로 옮기기~~ (2026-11-09 완료). 실제 절차(별칭을 config 맨 위에, `AddKeysToAgent no`, git 훅, Claude Code 표기 끄기)를 7절에 반영했다.
+- 제출 준비 남은 일 (아래). Phase 5·6은 끝났다.
 
 **Phase 5 — 제출용 MVP 화면** (2026-11-09 완료, 결과 `docs/phase5/README.md`)
 
@@ -149,48 +152,81 @@
 | 5-9 | 검증·문서 | S1~S8 다시 실행 + 새 화면 시나리오, 화면 캡처, `docs/phase5` | 2시간 |
 | 5-10 | 오픈소스 라이선스 | 설정에 "오픈소스 라이선스": `docs/open-source-licenses.md`의 표기용 목록 + Apache 2.0 전문 | 0.5시간 |
 
-**제출 준비** (코드 변경은 Phase 5 이후)
+**제출 준비**
 
-- `versionName`이 아직 `0.1.0-spike`다 (설정 › 앱 정보에 보임). 제출 APK 전에 바꿀지 정한다.
-- 서명 키 만들기(`scripts/create-release-key.sh`) → `./gradlew releaseApk` → Cold Boot한 에뮬레이터에 새로 설치해 S1·S3·S4·S8 확인 → `apksigner verify --print-certs`로 인증서 이름 확인.
-- README를 공모전 필수 4항목으로 다시 쓴다: 앱 이름 및 한 줄 소개 / 실행 방법 / 테스트 환경 및 필요한 설정(Pleos Connect Emulator v2.1.0, Virtual Console 조작법, 시간대) / APK 파일 위치.
-- 시연 영상 (에뮬레이터 시간대 한국 표준시로 맞춘 뒤).
+- ~~`versionName`~~ 1.0.0으로 바꿈 (Phase 6).
+- ~~서명 키 → `./gradlew releaseApk` → Cold Boot·새 설치로 S1·S3·S4·S8 → `apksigner verify --print-certs`~~ (Phase 6, `apk/README.md`).
+- ~~README를 공모전 필수 4항목으로~~ (Phase 6): 앱 이름 및 한 줄 소개 / 실행 방법 / 테스트 환경 및 필요한 설정 / APK 파일 위치.
+- 서명 키 백업 1부를 이 PC 밖에 둔다 (사용자).
+- 시연 영상 (에뮬레이터 시간대는 한국 표준시로 바꿔 둠). 예시 기록을 쓸지, 쓴다면 화면의 "예시" 표시를 그대로 둔다.
 - 비공개 저장소라면 심사용 GitHub 계정을 Collaborator로 초대 (계정 이름은 공모전 공지에서 확인).
 - 기획서·동의서는 사용자가 작성. 개발 계획(SDK/API 사용 계획)은 `docs/spike/` 결과를 쓴다.
 - `docs/pleos-questions.md`를 Pleos에 보낼지는 사용자가 정한다.
 
-**일정 제안**: Phase 5 ~11/09 → release·README·영상 11/10~12 → 메일 제출 11/13~14.
+**일정 제안**: Phase 5·6 11/09 완료 → 시연 영상 11/10~12 → 메일 제출 11/13~14.
 
-## 7. 새 PC(맥북) 세팅 순서
+## 7. 새 PC 세팅 순서
 
-1. Android Studio와 Android SDK를 설치한다. Gradle 8.10.2는 JDK 17 또는 21이 필요하다 (JDK 25에서는 안 됨). Settings › Build Tools › Gradle › Gradle JDK에서 버전을 확인한다.
+개인 GitHub 계정(`gh` 로그인, `~/.ssh/id_*` 기본 키, 전역 git 설정의 실명·개인 이메일)이 있는 PC를 전제로 한다. 이 저장소에서는 `gh`를 쓰지 않고, 전역 git 설정은 바꾸지 않는다.
+
+1. Android Studio와 Android SDK를 설치한다. Gradle 8.10.2는 JDK 17 또는 21이 필요하다 (JDK 25에서는 안 됨).
+   Android Studio에 들어 있는 JDK가 25일 수 있다. 터미널 빌드는 `export JAVA_HOME="$(/usr/libexec/java_home -v 17)"`(또는 21)로, Android Studio는 Settings › Build Tools › Gradle › Gradle JDK에서 맞춘다.
+   첫 빌드 때 Android SDK Platform 35가 없으면 Gradle이 자동으로 설치한다.
 2. Pleos Connect Emulator v2.1.0 시스템 이미지와 AVD(`Pleos_Connect_v2.1.0`, Android 14 / API 34)를 Pleos 문서대로 설정한다:
    https://document.pleos.ai/docs/connect/guide/getting-started/application-development/setup-connect-sdk-emulator
-3. `kilobook-dev` 전용 SSH 키를 PC마다 따로 만들고 GitHub `kilobook-dev` 계정에 등록한다 (개인 계정과 섞이지 않게 별칭을 쓴다):
+3. 먼저 확인만 한다 (개인 계정이 끼어들 수 있는 곳):
+   ```bash
+   git config --global --get core.sshCommand; echo "GIT_SSH_COMMAND=$GIT_SSH_COMMAND GIT_SSH=$GIT_SSH"
+   gh auth status                                         # 로그인돼 있어도 이 저장소에서는 쓰지 않는다
+   grep -n -E '^[[:space:]]*(Host|IdentityFile|AddKeysToAgent)' ~/.ssh/config
+   ssh-add -l                                             # 에이전트에 올라간 키
+   ```
+4. `kilobook-dev` 전용 SSH 키를 PC마다 따로 만들고, 별칭 블록을 `~/.ssh/config` **맨 위에** 넣는다 (백업 후, 기존 내용은 그대로):
    ```bash
    ssh-keygen -t ed25519 -f ~/.ssh/kilobook_dev_ed25519 -C kilobook-dev -N ""
-   printf '\n\nHost github-kilobook\n    HostName github.com\n    User git\n    IdentityFile ~/.ssh/kilobook_dev_ed25519\n    IdentitiesOnly yes\n' >> ~/.ssh/config
-   pbcopy < ~/.ssh/kilobook_dev_ed25519.pub   # kilobook-dev로 로그인한 브라우저: Settings › SSH and GPG keys › New SSH key
-   ssh -T git@github-kilobook                 # "Hi kilobook-dev!" 확인
+   cp ~/.ssh/config ~/.ssh/config.bak-kilobook 2>/dev/null
+   { printf '%s\n' '# KiloBook project account (kilobook-dev)' 'Host github-kilobook' '    HostName github.com' '    User git' '    IdentityFile ~/.ssh/kilobook_dev_ed25519' '    IdentitiesOnly yes' '    AddKeysToAgent no' ''; cat ~/.ssh/config 2>/dev/null; } > ~/.ssh/config.new && mv ~/.ssh/config.new ~/.ssh/config && chmod 600 ~/.ssh/config
+   ssh -G github-kilobook | grep -E '^(hostname|user|identityfile|identitiesonly|addkeystoagent) '
    ```
-   이 키를 `ssh-add`로 에이전트에 넣지 않는다 (넣으면 개인 저장소 접속에 이 키가 먼저 쓰일 수 있다).
-4. clone하고, **바로** 저장소 안에서 작성자를 설정한다:
+   - `identityfile`은 `~/.ssh/kilobook_dev_ed25519` 한 줄만 나와야 한다. ssh는 맞는 `Host` 블록의 `IdentityFile`을 모두 모아 앞에 적힌 것부터 쓰기 때문에 블록을 맨 위에 둔다.
+     `Host *` 블록의 다른 키가 함께 나오면 그 줄을 `Host * !github-kilobook`으로 바꾼다.
+   - 이 키를 `ssh-add`로 에이전트에 넣지 않는다 (`AddKeysToAgent no`). 넣으면 개인 저장소에 접속할 때 이 키가 먼저 쓰여 다른 계정으로 로그인될 수 있다.
+   - 공개 키 등록: `pbcopy < ~/.ssh/kilobook_dev_ed25519.pub` → 브라우저 오른쪽 위 계정이 `kilobook-dev`인지 먼저 확인 → Settings › SSH and GPG keys › New SSH key (Title은 PC를 구분하는 이름).
+     다른 PC에서 등록한 키는 지우지 않는다.
+   - `ssh -T git@github-kilobook` → `Hi kilobook-dev!`. 다른 이름이 나오면 멈춘다.
+5. clone하고, **바로** 저장소 안에서 작성자를 설정한다:
    ```bash
    git clone git@github-kilobook:kilobook-dev/kilobook.git
    cd kilobook
    git config user.name "kilobook-dev"
    git config user.email "354364919+kilobook-dev@users.noreply.github.com"
-   git config user.name && git config user.email   # 위 값이 나오는지 확인
+   git config --show-origin user.name; git config --show-origin user.email   # 둘 다 file:.git/config
+   git remote -v                                                             # git@github-kilobook:kilobook-dev/kilobook.git 만
    ```
-   전역 설정에 실명·개인 이메일이 있어도 이 저장소에서는 위 값이 쓰인다. 커밋 전에 한 번 더 확인한다.
-5. Android Studio로 열면 `local.properties`(`sdk.dir`)가 생긴다. 이 파일은 git에 올라가지 않는다.
-6. 빌드·설치: `./gradlew installDebug` → `adb shell am start -n com.kilobook.app/.MainActivity`
-7. 에뮬레이터 준비: 시간대를 한국 표준시로 (`docs/spike/phase4-scenarios.md` "시간대 설정"), `adb forward tcp:8088 tcp:8088` → http://127.0.0.1:8088 콘솔 열기 → S1로 연결 확인.
-8. 공식 샘플 앱이 필요하면 `reference/`에 받는다 (git 제외): `git clone https://github.com/Pleos-Playground/pleos-sample-vehicle-app reference/pleos-sample-vehicle-app`
-9. 서명 키 (제출 APK를 만들 때):
-   - `scripts/create-release-key.sh` → 키는 `~/Keys/kilobook/kilobook-release.jks` (저장소 밖), 인증서 `CN=kilobook-dev, O=KiloBook`. 다른 곳에 백업 1부 (잃어버리면 다시 만들 수 없음).
-   - 출력된 `release.*` 4줄을 `local.properties`에 넣는다 (git 제외).
-   - `./gradlew releaseApk` → `apk/KiloBook_KiloBook_release.apk`
+   - 3번에서 전역 `core.sshCommand`가 있었다면 `git config core.sshCommand ssh`도 저장소에 넣는다 (전역 설정이 다른 키를 지정하지 못하게).
+   - `git@github.com:…`이나 `https://github.com/…` 주소로 이 저장소를 clone·fetch·push하지 않는다.
+6. 실수 방지 git 훅을 설치한다 (`.git/hooks`는 커밋되지 않아 PC마다 한다):
+   ```bash
+   cp scripts/git-hooks/commit-msg scripts/git-hooks/pre-push .git/hooks/ && chmod +x .git/hooks/commit-msg .git/hooks/pre-push
+   git commit --allow-empty -m "hook test" -m "Co-Authored-By: test <test@example.com>"   # 거부돼야 한다
+   ```
+   - `commit-msg`: 공동 작성자·Claude 표기 줄이 있는 커밋 메시지를 막는다.
+   - `pre-push`: 원격 주소가 `github-kilobook` 별칭인지, 올릴 커밋의 작성자·커미터 이메일이 위 noreply 주소뿐인지, 공동 작성자 줄이 없는지 확인한다.
+7. Claude Code의 공동 작성자·PR 표기를 끈다 (git에 올라가지 않는 로컬 설정):
+   ```bash
+   mkdir -p .claude && printf '%s\n' '{' '  "attribution": { "commit": "", "pr": "", "sessionUrl": false }' '}' > .claude/settings.local.json
+   printf '\n.claude/settings.local.json\n' >> .git/info/exclude
+   git check-ignore -v .claude/settings.local.json && git status --short   # 제외 규칙이 나오고, status는 비어 있어야 한다
+   ```
+8. `local.properties`(`sdk.dir`): Android Studio로 열면 생긴다. 터미널만 쓰면 `printf 'sdk.dir=%s\n' "$HOME/Library/Android/sdk" > local.properties`. git에 올라가지 않는다.
+9. 빌드·설치: `./gradlew installDebug` → `adb shell am start -n com.kilobook.app/.MainActivity`
+10. 에뮬레이터 준비: 시간대를 한국 표준시로 (`docs/spike/phase4-scenarios.md` "시간대 설정", 한 번 바꾸면 유지), `adb forward tcp:8088 tcp:8088` → http://127.0.0.1:8088 콘솔 열기 → S1로 연결 확인.
+    콘솔 페이지 없이 터미널에서 시험할 때는 `docs/phase5/README.md` "시험할 때 알게 된 것".
+11. 공식 샘플 앱이 필요하면 `reference/`에 받는다 (git 제외): `git clone https://github.com/Pleos-Playground/pleos-sample-vehicle-app reference/pleos-sample-vehicle-app`
+12. 서명 키 (제출 APK를 만들 때, PC마다 새로 만들지 않는다. 처음 만든 키를 옮겨 쓴다):
+    - 처음 한 번: `scripts/create-release-key.sh` → 키는 `~/Keys/kilobook/kilobook-release.jks` (저장소 밖), 인증서 `CN=kilobook-dev, O=KiloBook`. 다른 곳에 백업 1부 (잃어버리면 다시 만들 수 없음).
+    - 서명 값은 `~/.gradle/gradle.properties`(저장소 밖)에 `kilobook.release.*` 4줄로 넣는다. 넣는 법은 `apk/README.md`.
+    - `./gradlew releaseApk` → `apk/KiloBook_KiloBook_release.apk`
 
 ## 8. 에뮬레이터·콘솔 주의사항 (검증 중 알게 된 것)
 
