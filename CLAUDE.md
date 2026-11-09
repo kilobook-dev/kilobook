@@ -106,20 +106,22 @@
 3. API 이름·권한·단위는 추측하지 않는다. Pleos 공식 문서로 확인하고 다르면 보고한다.
 4. SDK가 Unsupported·null·오류를 주면 우회 코드로 덮지 않는다. 그 결과를 화면과 보고에 그대로 남긴다.
 5. 새 Android 개념마다 iOS/SwiftUI 대응을 2~3줄로 설명한다.
-6. Phase마다 git 커밋한다. 커밋 메시지 끝에 `Co-Authored-By: Claude …` 줄을 붙인다.
+6. Phase마다 git 커밋한다. 커밋 메시지에 `Co-Authored-By` 같은 공동 작성자 줄을 넣지 않는다 (사용자 지시. 이전 커밋에서도 지웠다, 2026-11-09).
 7. 범위 밖: TTS/STT, NaviHelper, Toll, 네트워크, 파일 내보내기, 디자인. (Phase 5의 큰 글씨·큰 버튼은 승인된 범위. 그 이상 꾸미지 않는다. TTS/STT는 확인과 계획만 했고, 구현은 Phase 5 이후 따로 승인 받는다.)
 8. 권한은 Normal·Dangerous만 쓴다. 새 권한을 넣을 때는 에뮬레이터에서 `adb shell pm list permissions -g -f`로 `protectionLevel`을 확인하고 `docs/permissions.md`에 적는다.
 9. **블라인드 심사** (접수양식 DOCX 02 항목: 링크·첨부를 포함해 실명·계정 노출 금지):
-   - 커밋 작성자는 저장소 로컬 설정 `kilobook-dev` / `kilobook-dev@users.noreply.github.com`. 이 PC의 전역 git 설정은 쓰지 않는다. 이전 커밋도 모두 이 이름으로 바꿨다 (2026-11-09).
+   - 커밋 작성자는 저장소 로컬 설정 `kilobook-dev` / `354364919+kilobook-dev@users.noreply.github.com` (GitHub 계정 `kilobook-dev`의 noreply 주소. 이 형식이어야 커밋이 계정에 연결된다).
+     이 PC의 전역 git 설정은 쓰지 않는다. 이전 커밋도 모두 이 이름·주소로 바꿨다 (2026-11-09).
    - 커밋, 파일, 문서, APK에 실명·개인 이메일·개인 계정·개인 경로(홈 폴더 경로, 기기 이름)를 넣지 않는다.
    - 서명 인증서 이름(CN/O)도 프로젝트 이름으로 만든다 (APK를 받은 누구나 볼 수 있음).
-10. 원격 저장소는 사용자가 GitHub 조직 저장소 주소를 줄 때까지 push하지 않는다.
+10. **원격 저장소**: `origin` = `git@github-kilobook:kilobook-dev/kilobook.git` (Private). push는 `kilobook-dev` 전용 SSH 키의 별칭(`github-kilobook`, 7절 3번)으로만 한다.
+    PC의 `gh`와 기본 SSH 키는 개인 계정일 수 있으니 이 저장소에서 `gh` 명령을 쓰지 않는다. 강제 push 하지 않는다.
 
 ## 6. 남은 일
 
 **바로 다음**
 
-- 사용자가 원격 저장소 주소를 주면 `main`과 태그(`spike-v1`)를 push한다.
+- 맥북으로 옮기기: 7절 순서대로 SSH 키 등록 → clone → 저장소 로컬 git 설정.
 
 **Phase 5 — 제출용 MVP 화면** (착수 승인됨, 맥북에서 시작)
 
@@ -153,18 +155,28 @@
 1. Android Studio와 Android SDK를 설치한다. Gradle 8.10.2는 JDK 17 또는 21이 필요하다 (JDK 25에서는 안 됨). Settings › Build Tools › Gradle › Gradle JDK에서 버전을 확인한다.
 2. Pleos Connect Emulator v2.1.0 시스템 이미지와 AVD(`Pleos_Connect_v2.1.0`, Android 14 / API 34)를 Pleos 문서대로 설정한다:
    https://document.pleos.ai/docs/connect/guide/getting-started/application-development/setup-connect-sdk-emulator
-3. 저장소를 clone하고, **바로** 저장소 안에서:
+3. `kilobook-dev` 전용 SSH 키를 PC마다 따로 만들고 GitHub `kilobook-dev` 계정에 등록한다 (개인 계정과 섞이지 않게 별칭을 쓴다):
    ```bash
+   ssh-keygen -t ed25519 -f ~/.ssh/kilobook_dev_ed25519 -C kilobook-dev -N ""
+   printf '\n\nHost github-kilobook\n    HostName github.com\n    User git\n    IdentityFile ~/.ssh/kilobook_dev_ed25519\n    IdentitiesOnly yes\n' >> ~/.ssh/config
+   pbcopy < ~/.ssh/kilobook_dev_ed25519.pub   # kilobook-dev로 로그인한 브라우저: Settings › SSH and GPG keys › New SSH key
+   ssh -T git@github-kilobook                 # "Hi kilobook-dev!" 확인
+   ```
+   이 키를 `ssh-add`로 에이전트에 넣지 않는다 (넣으면 개인 저장소 접속에 이 키가 먼저 쓰일 수 있다).
+4. clone하고, **바로** 저장소 안에서 작성자를 설정한다:
+   ```bash
+   git clone git@github-kilobook:kilobook-dev/kilobook.git
+   cd kilobook
    git config user.name "kilobook-dev"
-   git config user.email "kilobook-dev@users.noreply.github.com"
+   git config user.email "354364919+kilobook-dev@users.noreply.github.com"
    git config user.name && git config user.email   # 위 값이 나오는지 확인
    ```
    전역 설정에 실명·개인 이메일이 있어도 이 저장소에서는 위 값이 쓰인다. 커밋 전에 한 번 더 확인한다.
-4. Android Studio로 열면 `local.properties`(`sdk.dir`)가 생긴다. 이 파일은 git에 올라가지 않는다.
-5. 빌드·설치: `./gradlew installDebug` → `adb shell am start -n com.kilobook.app/.MainActivity`
-6. 에뮬레이터 준비: 시간대를 한국 표준시로 (`docs/spike/phase4-scenarios.md` "시간대 설정"), `adb forward tcp:8088 tcp:8088` → http://127.0.0.1:8088 콘솔 열기 → S1로 연결 확인.
-7. 공식 샘플 앱이 필요하면 `reference/`에 받는다 (git 제외): `git clone https://github.com/Pleos-Playground/pleos-sample-vehicle-app reference/pleos-sample-vehicle-app`
-8. 서명 키 (제출 APK를 만들 때):
+5. Android Studio로 열면 `local.properties`(`sdk.dir`)가 생긴다. 이 파일은 git에 올라가지 않는다.
+6. 빌드·설치: `./gradlew installDebug` → `adb shell am start -n com.kilobook.app/.MainActivity`
+7. 에뮬레이터 준비: 시간대를 한국 표준시로 (`docs/spike/phase4-scenarios.md` "시간대 설정"), `adb forward tcp:8088 tcp:8088` → http://127.0.0.1:8088 콘솔 열기 → S1로 연결 확인.
+8. 공식 샘플 앱이 필요하면 `reference/`에 받는다 (git 제외): `git clone https://github.com/Pleos-Playground/pleos-sample-vehicle-app reference/pleos-sample-vehicle-app`
+9. 서명 키 (제출 APK를 만들 때):
    - `scripts/create-release-key.sh` → 키는 `~/Keys/kilobook/kilobook-release.jks` (저장소 밖), 인증서 `CN=kilobook-dev, O=KiloBook`. 다른 곳에 백업 1부 (잃어버리면 다시 만들 수 없음).
    - 출력된 `release.*` 4줄을 `local.properties`에 넣는다 (git 제외).
    - `./gradlew releaseApk` → `apk/KiloBook_KiloBook_release.apk`
