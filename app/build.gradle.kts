@@ -47,8 +47,8 @@ android {
         applicationId = "com.$appSlug.$appIdSuffix"
         minSdk = 28
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
         resValue("string", "app_name", appName)
     }
 
@@ -88,6 +88,8 @@ android {
 
 dependencies {
     implementation(libs.pleos.vehicle)
+    implementation(libs.pleos.tts)
+    implementation(libs.pleos.stt)
 
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
@@ -101,6 +103,8 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.material3)
+
+    testImplementation(libs.junit)
 }
 
 // ./gradlew releaseApk -> signed release APK copied to apk/<teamName>_<appNameEn>_release.apk (the submission file).

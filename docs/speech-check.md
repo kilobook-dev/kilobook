@@ -1,5 +1,8 @@
 # TTS/STT 동작 확인과 계획
 
+> **Phase 7에서 구현했다 (2026-11-10).** 구현과 시험 결과는 [docs/phase7/README.md](phase7/README.md).
+> 이 문서와 달라진 점: `RECORD_AUDIO`는 필요 없다 (아래 2절), 쓰임은 "정차 후 한 번 묻기 + 음성 답"으로 정했다.
+
 확인일: 2026-11-06 / 에뮬레이터: Pleos Connect v2.1.0 (Android 14), Pleos 음성 서비스 `ai.pleos.playground.caas` 4.2.10
 
 질문: Pleos TTS/STT가 문서상 "준비 중"이라는데 실제로 동작하는가? 안 되면 Android 표준 TextToSpeech·SpeechRecognizer를 대안으로 쓴다 (구현은 Phase 5 이후).
@@ -30,7 +33,8 @@
 - **Mode**: `HYBRID`(기본. 서버 우선, 네트워크 실패 시 기기 내), `SERVER`(네트워크 + Pleos Playground 앱 등록 필요), `ON_DEVICE`(네트워크·앱 등록 필요 없음).
   네트워크는 이 앱의 범위 밖이므로 `ON_DEVICE`만 쓴다.
 - **권한**: TTS `pleos.car.permission.TTS_SERVICE`, STT `pleos.car.permission.STT_SERVICE`. 둘 다 normal (에뮬레이터 확인).
-  STT는 마이크를 쓰므로 `android.permission.RECORD_AUDIO`(dangerous, 실행 중 사용자 동의)도 필요하다.
+  ~~STT는 마이크를 쓰므로 `android.permission.RECORD_AUDIO`도 필요하다.~~ → **필요 없다 (Phase 7 확인).** 마이크는 Pleos 음성 서비스가 열고,
+  STT 문서(Declaring permissions)와 SDK 매니페스트가 요구하는 권한은 `STT_SERVICE`뿐이다. 이 확인용 앱은 `RECORD_AUDIO`를 부여한 채로 시험했었다.
 - **SDK가 더하는 것**: 매니페스트 병합으로 `INTERNET`(normal)이 들어온다 (SDK 주석 "CCG Validation 체크를 위한 권한").
   Pleos 음성 서비스 최소 버전 4.1.29 (SDK 매니페스트), 에뮬레이터는 4.2.10.
 - **문서 호출 순서**: TTS `initialize` → `addEventListener` → (`setLocale`) → (앱 등록: 서버 모드만) → `speak` → `stop` → `removeEventListener` → `release`.
@@ -49,7 +53,7 @@
 |---|---|---|---|
 | S-1 | 쓰임 확정 | 예: 정차 후 "방금 주행 X km, 용도를 골라 주세요" 음성 안내(TTS), "업무 / 출퇴근 / 개인" 음성 답(STT). 주행 중에는 말하지 않는다 | 사용자 결정 |
 | S-2 | 구조 | `speech/` 패키지: `SpeechOutput`·`SpeechInput` 인터페이스 + Pleos `ON_DEVICE` 구현. 인식 결과는 화면 버튼과 같은 "용도 선택" 경로로 넣는다. 음성이 실패하면 버튼만 쓴다 | 1.5시간 |
-| S-3 | 권한 | `TTS_SERVICE`, `STT_SERVICE`(normal) 선언. `RECORD_AUDIO`는 처음 음성 답을 쓸 때 요청하고, 거부하면 버튼만 쓴다 | 0.5시간 |
+| S-3 | 권한 | `TTS_SERVICE`, `STT_SERVICE`(normal) 선언. (Phase 7: `RECORD_AUDIO`는 필요 없어 넣지 않음) | 0.5시간 |
 | S-4 | 수명 | 화면 `onStop`에서 `stop()`·`release()`. 백그라운드 서비스에서는 음성을 쓰지 않는다 | 0.5시간 |
 | S-5 | 검증 | 에뮬레이터 마이크를 켜고 "업무"·"출퇴근"·"개인" 인식률 확인, 오류 결과(`ErrorType`)를 화면·보고에 그대로 남김 | 1시간 |
 | S-6 | 문서 | 오픈소스 라이선스 목록 갱신 (TTS/STT SDK, `universal-access`) | 0.2시간 |

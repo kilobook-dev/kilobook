@@ -27,7 +27,7 @@ object AppLog {
         val isAppEvent: Boolean get() = APP_PREFIXES.any { text.startsWith(it) }
     }
 
-    private val APP_PREFIXES = listOf("Recorder:", "Session:", "RecorderService:", "BootReceiver:", "Samples:")
+    private val APP_PREFIXES = listOf("Recorder:", "Session:", "RecorderService:", "BootReceiver:", "Samples:", "Voice:")
 
     private val _entries = MutableStateFlow<List<Entry>>(emptyList())
     val entries: StateFlow<List<Entry>> = _entries.asStateFlow()

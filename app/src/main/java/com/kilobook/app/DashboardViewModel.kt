@@ -12,6 +12,8 @@ import com.kilobook.app.recorder.RecorderStatus
 import com.kilobook.app.recorder.endSignals
 import com.kilobook.app.service.BootRecord
 import com.kilobook.app.service.RecorderService
+import com.kilobook.app.speech.VoiceAssistant
+import com.kilobook.app.speech.VoiceState
 import com.kilobook.app.vehicle.DashboardState
 import com.kilobook.app.vehicle.describe
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,8 +56,24 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     /** Last BOOT_COMPLETED handling (S8), saved by BootReceiver. */
     val bootRecord: StateFlow<String?> = _bootRecord.asStateFlow()
 
+    val voiceGuide: StateFlow<Boolean> = graph.display.voiceGuide
+    val voiceAnswer: StateFlow<Boolean> = graph.display.voiceAnswer
+
+    /** Phase 7: voice question and answer for the purpose card. Only while the screen is visible. */
+    private val voice = VoiceAssistant(
+        context = application,
+        scope = viewModelScope,
+        guideEnabled = { voiceGuide.value },
+        answerEnabled = { voiceAnswer.value },
+        mayTalk = { !driving.value && recorder.value.vehicleStopped },
+        onAnswer = { tripId, purpose -> choosePurpose(tripId, purpose) },
+    )
+    val voiceState: StateFlow<VoiceState> = voice.state
+
     init {
         session.acquire(OWNER)
+        // Never talk while driving: stop the moment driving starts.
+        viewModelScope.launch { driving.collect { if (it) voice.cancel("주행 시작") } }
     }
 
     /** Screen became visible: app start or return. A chance to re-ask and to check for gaps. */
@@ -63,11 +81,29 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         _bootRecord.value = BootRecord.last(getApplication())
         if (config.value.backgroundService) startService("screen")
         session.send(RecorderEvent.ScreenStarted)
+        voice.open()
     }
 
-    /** Screen went to the background: save the last known odometer once more. */
+    /** Screen went to the background: save the last known odometer once more, and stop any voice. */
     fun onScreenStop() {
         session.send(RecorderEvent.ScreenStopped)
+        voice.close()
+    }
+
+    /** The purpose card now shows [trip]; [waitingIds] are the trips it will ask one by one. */
+    fun onPurposeCardShown(trip: Trip, waitingIds: List<Long>) =
+        voice.onCardShown(trip, waitingIds, System.currentTimeMillis())
+
+    fun onPurposeCardHidden(tripId: Long) = voice.onCardHidden(tripId)
+
+    fun setVoiceGuide(on: Boolean) {
+        graph.display.setVoiceGuide(on)
+        voice.refresh()
+    }
+
+    fun setVoiceAnswer(on: Boolean) {
+        graph.display.setVoiceAnswer(on)
+        voice.refresh()
     }
 
     fun choosePurpose(tripId: Long, purpose: Purpose) = session.send(RecorderEvent.ChoosePurpose(tripId, purpose))
@@ -112,6 +148,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     override fun onCleared() {
+        voice.close()
         session.release(OWNER)
     }
 

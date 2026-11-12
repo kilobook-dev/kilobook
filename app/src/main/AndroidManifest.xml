@@ -15,6 +15,10 @@
     <!-- S8: start the recorder service when the car boots (protection level normal). -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!-- Phase 7: Pleos TextToSpeech / SpeechToText SDK (ON_DEVICE). Both protection level normal (docs/permissions.md). -->
+    <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
+    <uses-permission android:name="pleos.car.permission.STT_SERVICE" />
+
     <uses-feature
         android:name="android.hardware.type.automotive"
         android:required="true" />
@@ -26,9 +30,11 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
+        <!-- singleTop: the launcher (and am start) otherwise stacked a new MainActivity on every open. -->
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

@@ -31,9 +31,11 @@ private data class License(val name: String, val version: String, val license: S
 
 private val LICENSES = listOf(
     License(
-        "AndroidX (Activity, Annotation, Arch Core, Autofill, Collection, Concurrent, Core, CustomView, Emoji2, Fragment, " +
-            "Graphics, Interpolator, Lifecycle, Loader, ProfileInstaller, Room, SavedState, SQLite, Startup, Tracing, " +
-            "VersionedParcelable, ViewPager)",
+        "AndroidX (Activity, Annotation, AppCompat, Arch Core, Autofill, CardView, Collection, Concurrent, ConstraintLayout, " +
+            "CoordinatorLayout, Core, CursorAdapter, CustomView, DocumentFile, DrawerLayout, DynamicAnimation, Emoji2, Fragment, " +
+            "Graphics, Interpolator, Legacy Support, Lifecycle, Loader, LocalBroadcastManager, Print, ProfileInstaller, " +
+            "RecyclerView, Resource Inspection, Room, SavedState, Security, SQLite, Startup, Tracing, Transition, VectorDrawable, " +
+            "VersionedParcelable, ViewPager, ViewPager2)",
         "라이브러리별",
         APACHE,
         "https://developer.android.com/jetpack/androidx",
@@ -54,6 +56,26 @@ private val LICENSES = listOf(
     License("JSR 305 Annotations", "3.0.2", APACHE, "http://findbugs.sourceforge.net/"),
     License("javax.inject", "1", APACHE, "http://code.google.com/p/atinject/"),
     License("JSpecify", "1.0.0", APACHE, "https://jspecify.org/"),
+    License("Material Components for Android", "1.10.0", APACHE, "https://github.com/material-components/material-components-android"),
+    License("Tink", "1.8.0", APACHE, "https://github.com/tink-crypto/tink-java"),
+    License("Error Prone Annotations", "2.15.0", APACHE, "https://github.com/google/error-prone"),
+    License(
+        "JNA (Java Native Access)",
+        "5.13.0",
+        "Apache License 2.0 (LGPL-2.1-or-later와 Apache 2.0 중 Apache 2.0을 선택)",
+        "https://github.com/java-native-access/jna",
+    ),
+)
+
+private const val PLEOS_TERMS = "Pleos Playground 이용약관"
+private const val PLEOS_TERMS_URL =
+    "https://developers.pleos.ai/playground/external/use-policy?partnerId=672505ad-2e37-4500-8162-000bcfc05b5c&locale=en-US"
+
+/** Pleos SDKs: not open source, listed for completeness. */
+private val PLEOS = listOf(
+    License("Pleos Vehicle SDK (오픈소스 아님)", "2.3.2", PLEOS_TERMS, PLEOS_TERMS_URL),
+    License("Pleos TextToSpeech · SpeechToText SDK (오픈소스 아님)", "3.3.1", PLEOS_TERMS, PLEOS_TERMS_URL),
+    License("Pleos Universal Access (오픈소스 아님, 음성 SDK가 함께 가져옴)", "0.6.0", PLEOS_TERMS, PLEOS_TERMS_URL),
 )
 
 private const val APACHE = "Apache License 2.0"
@@ -84,21 +106,12 @@ fun LicensesScreen(onBack: () -> Unit) {
         }
         item {
             Text(
-                "킬로북은 아래 오픈소스 라이브러리를 사용합니다. 모두 Apache License 2.0을 따르며, 전문은 이 화면 아래에 있습니다.",
+                "킬로북은 아래 오픈소스 라이브러리를 사용합니다. 모두 Apache License 2.0으로 사용하며, 전문은 이 화면 아래에 있습니다.",
                 style = KiloType.body,
             )
         }
         items(LICENSES) { LicenseItem(it) }
-        item {
-            LicenseItem(
-                License(
-                    "Pleos Vehicle SDK (오픈소스 아님)",
-                    "2.3.2",
-                    "Pleos Playground 이용약관",
-                    "https://developers.pleos.ai/playground/external/use-policy?partnerId=672505ad-2e37-4500-8162-000bcfc05b5c&locale=en-US",
-                ),
-            )
-        }
+        items(PLEOS) { LicenseItem(it) }
         item { Text("Apache License 2.0 전문", style = KiloType.title, modifier = Modifier.padding(top = KiloSize.sectionGap)) }
         val paragraphs = apacheText
         if (paragraphs == null) {

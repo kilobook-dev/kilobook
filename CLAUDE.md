@@ -49,6 +49,8 @@
 - **Phase 6(제출용 release) 완료 (2026-11-09).** 서명 키 `~/Keys/kilobook/kilobook-release.jks`(저장소 밖), 서명 값은 `~/.gradle/gradle.properties`의 `kilobook.release.*`.
   `apk/KiloBook_KiloBook_release.apk` v1.0.0 (서명자 `CN=kilobook-dev, O=KiloBook`). Cold Boot·새 설치로 S1·S3·S4·S8 통과. README를 공모전 필수 4항목으로 다시 씀. 태그 `v1.0.0`.
   결과: `apk/README.md` "확인 결과".
+- **Phase 7(음성 용도 확인) 완료 (2026-11-10~12).** 정차 시 Pleos TTS로 한 번 묻기, 음성 답(STT), 설정 스위치 2개, 오디오 포커스, versionName 1.1.0 / versionCode 2.
+  시험 V1~V9 통과 (음성 답 4가지 모두 인식). "음성으로 답하기" 기본 켬. release v1.1.0: Cold Boot·새 설치로 S1·S3·S4·S8 + 음성 질문 통과 (`apk/README.md`). 태그 `v1.1.0`. 결과: `docs/phase7/README.md`.
 
 | 시나리오 | 결과 | 요지 |
 |---|---|---|
@@ -101,15 +103,30 @@
 
 - **화면 없는 Foreground Service가 주행 중 차량 신호를 받을 수 있다** (운영 측 확인). 이 앱의 S7 B·S8 결과와 같다.
 - **권한**: Android 표준 API는 Normal·Dangerous 권한만 쓸 수 있고, signature·privileged 권한은 쓸 수 없다.
-  점검 결과는 `docs/permissions.md`. 걸리던 `CAR_VENDOR_EXTENSION`(signature|privileged, 디버그 비교 표시용)은 삭제했다 (2026-11-09). 지금 7개 모두 Normal이다.
+  점검 결과는 `docs/permissions.md`. 걸리던 `CAR_VENDOR_EXTENSION`(signature|privileged, 디버그 비교 표시용)은 삭제했다 (2026-11-09).
+  지금 10개 (Phase 7에 `TTS_SERVICE`·`STT_SERVICE`·`INTERNET`이 늘었다). AndroidX가 넣는 앱 자신의 `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` 말고는 모두 Normal이다. `RECORD_AUDIO`는 필요 없다.
 - **공모전 자료**는 Pleos Playground 공개 문서가 전부이고, 공개 API 외에는 제공되지 않는다.
 - 개인 참가자는 제출 APK 파일명의 팀명 자리에 앱 이름을 써도 된다 → `KiloBook_KiloBook_release.apk`.
 
 **TTS/STT와 라이선스**
 
-- **TTS/STT**: Pleos SDK 3.3.1 `ON_DEVICE`가 에뮬레이터에서 동작한다 (TTS 재생 확인, STT 엔진 응답). Android 표준 `TextToSpeech`·`SpeechRecognizer`는 동작하지 않는다.
-  구현은 Phase 5 이후 승인 받고 한다. 결과와 계획은 `docs/speech-check.md`.
-- **오픈소스 라이선스**: 목록은 `docs/open-source-licenses.md`, README "오픈소스 라이선스" 절. 앱 설정 화면 표기는 Phase 5 (5-10). 라이브러리가 바뀌면 목록을 다시 만든다.
+- **TTS/STT**: Pleos SDK 3.3.1 `ON_DEVICE`가 에뮬레이터에서 동작한다. Android 표준 `TextToSpeech`·`SpeechRecognizer`는 동작하지 않는다 (`docs/speech-check.md`).
+  Phase 7에서 구현 (`speech/`, `docs/phase7/README.md`).
+- **오픈소스 라이선스**: 목록은 `docs/open-source-licenses.md`, README "오픈소스 라이선스" 절, 앱 설정 › 오픈소스 라이선스(`ui/LicensesScreen.kt`). 라이브러리가 바뀌면 셋을 함께 다시 만든다.
+  Phase 7에서 138개 (Pleos SDK 6개는 오픈소스 아님, JNA는 LGPL-2.1/Apache-2.0 이중 라이선스 → Apache-2.0).
+
+**음성 (Phase 7)** (`speech/`, 자세히는 `docs/phase7/README.md`)
+
+- 정차해서 용도 카드가 뜰 때만 한 번 말한다. 방금 끝난 주행(2분 이내, 처음 묻는 것) → "이번 주행 {거리}, 업무였나요?", 그 밖 → "용도 확인이 필요한 주행이 {N}건 있어요".
+  거리는 한국어 수사로 소수 첫째 자리까지 쓴다 (`VoicePrompts.spokenKm`).
+- 주행 중·정차 신호 없음·통화 중에는 말하지 않는다. 주행 시작, 카드 닫힘, 화면 숨김, 포커스 상실이면 바로 멈추고 마이크를 끄고 포커스를 돌려준다.
+- 주행 하나에 한 번. 끝까지 말한 것만 기억하고(프로세스 단위), 끊긴 안내는 다음 정차 때 다시 말한다.
+- 오디오 포커스: `USAGE_NOTIFICATION` + `CONTENT_TYPE_SPEECH`, `GAIN_TRANSIENT_MAY_DUCK` (Pleos Interaction Matrix에서 NOTIFICATION은 음악·내비와 함께, Gleo·벨·긴급 중에는 거절). 통화 중 침묵은 앱이 더한 규칙.
+- 선행 묵음: SDK가 PCM을 주지 않아 포커스를 받은 뒤 200 ms 기다렸다가 `speak()` (Pleos 가이드는 오디오 데이터 안의 묵음을 권장).
+- 음성 답: 질문 뒤 마이크가 열린 때부터 7초. "업무/출퇴근/개인"(+출근·퇴근·사적, "네" = 업무, "아니요 개인이요" = 개인) → 버튼과 같은 `choosePurpose`. 규칙은 `VoicePromptsTest` 단위 테스트로 확인. 못 알아들으면 버튼을 기다린다.
+- STT 순서: 최종 결과(`onUpdated(completed=true)`)는 `onEndedRecognition` 뒤에 온다. 끝 신호 뒤 1초 기다리고(없으면 마지막 중간 결과), 듣기가 어떻게 끝나든 `stop()`을 부른다 (안 부르면 서비스가 녹음을 계속한다).
+- SDK는 화면이 보일 때만 연다 (`onStart` 초기화, `onStop` 해제). 백그라운드 서비스에서는 음성을 쓰지 않는다.
+- `MainActivity`는 `launchMode="singleTop"`: 런처가 열 때마다 화면을 새로 쌓던 것을 막는다.
 
 ## 5. 작업 규칙
 
@@ -119,7 +136,7 @@
 4. SDK가 Unsupported·null·오류를 주면 우회 코드로 덮지 않는다. 그 결과를 화면과 보고에 그대로 남긴다.
 5. 새 Android 개념마다 iOS/SwiftUI 대응을 2~3줄로 설명한다.
 6. Phase마다 git 커밋한다. 커밋 메시지에 `Co-Authored-By` 같은 공동 작성자 줄을 넣지 않는다 (사용자 지시. 이전 커밋에서도 지웠다, 2026-11-09).
-7. 범위 밖: TTS/STT, NaviHelper, Toll, 네트워크, 파일 내보내기, 디자인. (Phase 5의 큰 글씨·큰 버튼은 승인된 범위. 그 이상 꾸미지 않는다. TTS/STT는 확인과 계획만 했고, 구현은 Phase 5 이후 따로 승인 받는다.)
+7. 범위 밖: NaviHelper, Toll, 네트워크, 파일 내보내기, 디자인. (Phase 5의 큰 글씨·큰 버튼은 승인된 범위. 그 이상 꾸미지 않는다. TTS/STT는 Phase 7에서 승인 받아 구현했다: 정차 시 용도 질문과 음성 답만.)
 8. 권한은 Normal·Dangerous만 쓴다. 새 권한을 넣을 때는 에뮬레이터에서 `adb shell pm list permissions -g -f`로 `protectionLevel`을 확인하고 `docs/permissions.md`에 적는다.
 9. **블라인드 심사** (접수양식 DOCX 02 항목: 링크·첨부를 포함해 실명·계정 노출 금지):
    - 커밋 작성자는 저장소 로컬 설정 `kilobook-dev` / `354364919+kilobook-dev@users.noreply.github.com` (GitHub 계정 `kilobook-dev`의 noreply 주소. 이 형식이어야 커밋이 계정에 연결된다).
@@ -134,6 +151,7 @@
 **바로 다음**
 
 - ~~새 PC로 옮기기~~ (2026-11-09 완료). 실제 절차(별칭을 config 맨 위에, `AddKeysToAgent no`, git 훅, Claude Code 표기 끄기)를 7절에 반영했다.
+- ~~Phase 7 마무리: V8·V9, 답하기 기본값, Back 키 재확인, release·Cold Boot 시험, 태그 `v1.1.0`~~ (2026-11-12 완료).
 - 제출 준비 남은 일 (아래). Phase 5·6은 끝났다.
 
 **Phase 5 — 제출용 MVP 화면** (2026-11-09 완료, 결과 `docs/phase5/README.md`)
@@ -234,9 +252,13 @@
 - 콘솔 총 주행거리는 줄일 수 없고, 에뮬레이터를 다시 켜면 0이 된다.
 - 재부팅에 `adb reboot`을 쓰지 않는다 (에뮬레이터 크래시). 창을 닫고 다시 켠다. 이 AVD는 항상 Cold Boot로 켜진다. Quick Boot(스냅샷)로는 `BOOT_COMPLETED`가 오지 않는다.
 - Android Studio Stop(■)은 강제 종료다. 그 뒤 앱을 한 번 열기 전까지는 부팅 신호를 받지 못한다.
-- Back 키로 앱이 닫히지 않는다. 창 닫기: `adb shell am stack list | grep kilobook` → `adb shell am stack remove <taskId>`.
+- Back 키로 앱이 닫히지 않는다 (앱 안의 Back은 동작, `singleTop` 뒤에도 같음). 창 닫기: `adb shell am stack list | grep kilobook` → `adb shell am stack remove <taskId>`.
 - 운전자는 user 10이다. `BOOT_COMPLETED`는 부팅 완료 후 10초~1분 넘게 걸려 온다.
 - 재시작 직후 `registerDistanceDriven` 첫 콜백은 이전 값을 준다 (약 1초 뒤 현재 값).
+- 음성: 에뮬레이터 마이크(Extended Controls › Microphone › **Enable Host Microphone Access** 켬, **Simulate Insert Headset** 끔)는 다시 켜면 꺼진다.
+  Mac 입력은 내장 마이크로 둔다. 블루투스 이어폰 마이크는 입력 크기만 오르고 인식되지 않았다. Mac 스피커로 낸 소리(`say`)도 이어폰 마이크에 들어가지 않는다.
+  입력 확인은 디버그 로그의 "RMS n회 최소 x 최대 y" (소리 없음 1~4, 들어오면 수백~수천).
+- 런처에서 앱을 열 때마다 `MainActivity`가 새로 만들어졌다 (`wm_create_activity`). `singleTop` 뒤에는 `wm_new_intent`로 같은 화면에 전달된다.
 - `PARKING_BRAKE_ON`은 항상 false, `IGNITION_STATE`는 미지원, `VENDOR_GEAR_SELECTION`은 `CAR_VENDOR_EXTENSION`(signature) 권한 거부 (그 뒤 권한과 읽기 코드 삭제).
 
 ## 9. iOS 비유 (지금까지 나온 개념)
@@ -263,6 +285,11 @@
 | `BackHandler` | 내비게이션 스택의 뒤로 가기를 가로채는 것 (`NavigationStack` 경로 pop) |
 | `assets/` 폴더 (라이선스 전문) | 앱 번들 리소스 (`Bundle.main.url(forResource:)`) |
 | `Modifier.toggleable` (줄 전체를 스위치로) | `Toggle`을 `Button` 스타일 줄 전체에 붙인 것 |
+| 오디오 포커스 (`AudioFocusRequest`, `GAIN_TRANSIENT_MAY_DUCK`) | `AVAudioSession` 활성화 + `.duckOthers`, 끝나면 `setActive(false, .notifyOthersOnDeactivation)` |
+| 포커스 상실 콜백 | `AVAudioSession.interruptionNotification` |
+| `suspendCancellableCoroutine` (콜백 SDK를 `suspend`로) | `withCheckedContinuation` |
+| `launchMode="singleTop"` | 떠 있는 Scene을 다시 쓰고 새 창을 만들지 않는 것 (`onOpenURL` 등으로 받음) |
+| `LaunchedEffect(key)` / `DisposableEffect` | `.task(id:)` / `.onDisappear` |
 
 ## 10. 문서 위치
 
@@ -271,6 +298,7 @@
 - `docs/spike/` — Phase 1~4 기록과 시나리오 S1~S8 (`phase4-scenarios.md`는 회귀 테스트 안내로 계속 쓴다. 맨 위에 Phase 5 화면 위치)
 - `docs/permissions.md` — 권한 점검 (protectionLevel, 운영 기준 Normal·Dangerous만)
 - `docs/open-source-licenses.md` — 오픈소스 라이선스 (설정 화면 표기용 목록 + 라이브러리별 부록)
-- `docs/speech-check.md` — TTS/STT 동작 확인과 계획
+- `docs/phase7/README.md` — 음성 용도 확인(TTS/STT): 언제 말하는지, 오디오 포커스·선행 묵음, 시험 결과 V1~V12
+- `docs/speech-check.md` — TTS/STT 동작 확인과 계획 (Phase 7 이전)
 - `docs/pleos-questions.md` — Pleos 문의 목록 (DO 배포, specialUse, 상주 서비스 기준, 알림, 부팅 자동 시작)
 - `apk/README.md` — 제출 APK 규칙

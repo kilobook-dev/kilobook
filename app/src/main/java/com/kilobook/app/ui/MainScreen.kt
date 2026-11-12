@@ -18,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -64,6 +65,14 @@ fun MainScreen(viewModel: DashboardViewModel) {
     val showLicenses = current == Tab.SETTINGS && licensesOpen
 
     BackHandler(enabled = showLicenses) { licensesOpen = false }
+
+    // After a drive the driver should land on 홈, where the purpose card (and its voice question) appears.
+    LaunchedEffect(driving) {
+        if (driving && selected != Tab.DEBUG) {
+            selected = Tab.HOME
+            licensesOpen = false
+        }
+    }
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         TopBar(

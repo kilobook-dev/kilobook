@@ -15,6 +15,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -34,6 +36,7 @@ import com.kilobook.app.data.TripStatus
 import com.kilobook.app.recorder.RecorderConfig
 import com.kilobook.app.recorder.RecorderStatus
 import com.kilobook.app.service.RecorderService
+import com.kilobook.app.speech.VoiceState
 import com.kilobook.app.ui.theme.KiloSize
 import com.kilobook.app.ui.theme.KiloType
 import com.kilobook.app.vehicle.Reading
@@ -53,6 +56,7 @@ fun HomeScreen(viewModel: DashboardViewModel, onOpenTrips: () -> Unit) {
     val trips by viewModel.trips.collectAsStateWithLifecycle()
     val config by viewModel.config.collectAsStateWithLifecycle()
     val owners by viewModel.owners.collectAsStateWithLifecycle()
+    val voiceState by viewModel.voiceState.collectAsStateWithLifecycle()
     val month by produceState(YearMonth.now()) {
         while (true) {
             delay(60_000)
@@ -87,9 +91,14 @@ fun HomeScreen(viewModel: DashboardViewModel, onOpenTrips: () -> Unit) {
         // The 주행 종료 button sits above the purpose card while a trip is open.
         if (openTrip != null) status()
         toAsk.firstOrNull()?.let { trip ->
+            val waitingIds = toAsk.map { it.id }
+            // Phase 7: the card appearing is the moment to ask by voice; its leaving stops the voice.
+            LaunchedEffect(trip.id) { viewModel.onPurposeCardShown(trip, waitingIds) }
+            DisposableEffect(trip.id) { onDispose { viewModel.onPurposeCardHidden(trip.id) } }
             PurposeCard(
                 trip = trip,
                 remaining = toAsk.size,
+                voice = voiceState,
                 onPurpose = { viewModel.choosePurpose(trip.id, it) },
                 onLater = { viewModel.later(trip.id) },
             )
@@ -102,7 +111,7 @@ fun HomeScreen(viewModel: DashboardViewModel, onOpenTrips: () -> Unit) {
 // ---------- 5-2 / 5-3: purpose card, one trip at a time ----------
 
 @Composable
-private fun PurposeCard(trip: Trip, remaining: Int, onPurpose: (Purpose) -> Unit, onLater: () -> Unit) {
+private fun PurposeCard(trip: Trip, remaining: Int, voice: VoiceState, onPurpose: (Purpose) -> Unit, onLater: () -> Unit) {
     // One answer per card. The next trip replaces this one right after a tap, so taps in the first moment
     // are ignored too: a double tap must not answer the next trip.
     val shownAt = remember(trip.id) { SystemClock.uptimeMillis() }
@@ -131,6 +140,15 @@ private fun PurposeCard(trip: Trip, remaining: Int, onPurpose: (Purpose) -> Unit
             BigButton("출퇴근", Modifier.weight(1f)) { guarded { onPurpose(Purpose.COMMUTE) } }
             BigButton("개인", Modifier.weight(1f)) { guarded { onPurpose(Purpose.PERSONAL) } }
             BigOutlinedButton("나중에", Modifier.weight(1f)) { guarded(onLater) }
+        }
+        when (voice) {
+            VoiceState.SPEAKING -> Text("음성으로 묻는 중", style = KiloType.label, color = mutedColor())
+            VoiceState.LISTENING -> Text(
+                "● 듣고 있어요 · \"업무\", \"출퇴근\", \"개인\" 중 하나를 말해 주세요",
+                style = KiloType.labelStrong,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            VoiceState.IDLE -> Unit
         }
     }
 }

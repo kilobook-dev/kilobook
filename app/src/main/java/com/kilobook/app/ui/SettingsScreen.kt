@@ -34,6 +34,8 @@ import com.kilobook.app.ui.theme.KiloType
 @Composable
 fun SettingsScreen(viewModel: DashboardViewModel, onOpenLicenses: () -> Unit) {
     val showDebug by viewModel.showDebugPanel.collectAsStateWithLifecycle()
+    val voiceGuide by viewModel.voiceGuide.collectAsStateWithLifecycle()
+    val voiceAnswer by viewModel.voiceAnswer.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val version = remember {
         runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "—"
@@ -46,12 +48,36 @@ fun SettingsScreen(viewModel: DashboardViewModel, onOpenLicenses: () -> Unit) {
         SectionTitle("설정")
 
         SettingRow(
+            title = "음성 안내",
+            detail = "정차해서 용도 카드가 뜨면 음성으로 한 번 묻습니다. 주행 중에는 말하지 않습니다.",
+            modifier = Modifier.toggleable(value = voiceGuide, role = Role.Switch, onValueChange = viewModel::setVoiceGuide),
+        ) {
+            BigSwitch(voiceGuide)
+        }
+
+        SettingRow(
+            title = "음성으로 답하기",
+            detail = if (voiceGuide) {
+                "질문 뒤 \"업무\", \"출퇴근\", \"개인\"이라고 말하면 그 버튼을 누른 것과 같습니다. 차량 마이크를 씁니다."
+            } else {
+                "음성 안내가 켜져 있을 때만 씁니다."
+            },
+            modifier = Modifier.toggleable(
+                value = voiceAnswer,
+                enabled = voiceGuide,
+                role = Role.Switch,
+                onValueChange = viewModel::setVoiceAnswer,
+            ),
+        ) {
+            BigSwitch(voiceAnswer && voiceGuide)
+        }
+
+        SettingRow(
             title = "디버그 패널 보기",
             detail = "차량 API 결과, 기록 상태, 디버그 로그를 보여 주는 '디버그' 탭을 켭니다.",
             modifier = Modifier.toggleable(value = showDebug, role = Role.Switch, onValueChange = viewModel::setShowDebugPanel),
         ) {
-            // The whole row is the touch target; the switch only shows the state, drawn larger to be readable.
-            Switch(checked = showDebug, onCheckedChange = null, modifier = Modifier.padding(horizontal = 12.dp).scale(1.5f))
+            BigSwitch(showDebug)
         }
 
         SettingRow(
@@ -64,6 +90,12 @@ fun SettingsScreen(viewModel: DashboardViewModel, onOpenLicenses: () -> Unit) {
 
         SettingRow(title = "앱 정보", detail = "${context.getString(R.string.app_name)} $version") {}
     }
+}
+
+/** The whole row is the touch target; the switch only shows the state, drawn larger to be readable. */
+@Composable
+private fun BigSwitch(checked: Boolean) {
+    Switch(checked = checked, onCheckedChange = null, modifier = Modifier.padding(horizontal = 12.dp).scale(1.5f))
 }
 
 @Composable

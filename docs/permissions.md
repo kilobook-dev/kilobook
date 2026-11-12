@@ -1,6 +1,6 @@
 # 권한 점검
 
-확인일: 2026-11-06, `CAR_VENDOR_EXTENSION` 삭제 후 2026-11-09 다시 확인 / 에뮬레이터: Pleos Connect v2.1.0 (Android 14) / 앱 `com.kilobook.app` 디버그 빌드
+확인일: 2026-11-06, `CAR_VENDOR_EXTENSION` 삭제 후 2026-11-09, TTS/STT(Phase 7) 추가 후 2026-11-10 다시 확인 / 에뮬레이터: Pleos Connect v2.1.0 (Android 14) / 앱 `com.kilobook.app` 디버그 빌드
 
 운영사무국 기준: **Android 표준 API는 Normal·Dangerous 권한만 쓸 수 있다. signature·privileged 권한은 쓸 수 없다.**
 
@@ -11,7 +11,7 @@
 - 부여 결과: `adb shell dumpsys package com.kilobook.app | grep granted=`
 - Pleos SDK가 요구하는 권한: SDK 클래스의 `@RequiresPermission` (`javap -v`로 확인)
 
-## 1. 앱에 들어간 권한 (7개)
+## 1. 앱에 들어간 권한 (10개)
 
 | 권한 | 들어온 곳 | 정의한 패키지 | protectionLevel | 부여 | 쓰는 기능 | 판정 |
 |---|---|---|---|---|---|---|
@@ -20,6 +20,9 @@
 | `android.permission.FOREGROUND_SERVICE` | 앱 매니페스트 | android | normal\|instant | 예 | 백그라운드 기록 서비스 | 사용 가능 |
 | `android.permission.FOREGROUND_SERVICE_SPECIAL_USE` | 앱 매니페스트 | android | normal\|appop\|instant | 예 | 서비스 유형 `specialUse` | 사용 가능 (기본 수준 normal. `appop`은 시스템 설정으로 끌 수 있다는 표시) |
 | `android.permission.RECEIVE_BOOT_COMPLETED` | 앱 매니페스트 | android | normal | 예 | 부팅 시 자동 시작 (S8) | 사용 가능 |
+| `pleos.car.permission.TTS_SERVICE` | 앱 매니페스트 (Phase 7) | ai.pleos.playground.caas | normal | 예 | Pleos TextToSpeech SDK (정차 시 용도 질문·대기 안내) | 사용 가능 |
+| `pleos.car.permission.STT_SERVICE` | 앱 매니페스트 (Phase 7) | ai.pleos.playground.caas | normal | 예 | Pleos SpeechToText SDK (음성으로 용도 답하기) | 사용 가능 |
+| `android.permission.INTERNET` | Pleos TTS/STT SDK (병합) | android | normal\|instant | 예 | SDK 매니페스트 주석: "CCG Validation 체크를 위한 권한". 앱 코드는 네트워크를 쓰지 않는다 (음성은 `ON_DEVICE` 모드) | 사용 가능 |
 | `ai.pleos.playground.service.vehicle.VEHICLE_BINDING` | Pleos Vehicle SDK (병합) | ai.pleos.playground.service.vehicle | normal | 예 | SDK가 Pleos 차량 서비스에 연결 | 사용 가능 |
 | `com.kilobook.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` | AndroidX Core (병합) | com.kilobook.app (앱 자신) | signature | 예 | AndroidX가 앱 내부 수신기를 다른 앱이 부르지 못하게 막는 용도 | 표준 API 권한이 아니라 앱이 스스로 정의한 권한. 운영 기준 대상인지 확인 권장 |
 
@@ -45,10 +48,7 @@
 | `android.car.permission.CAR_MILEAGE` | signature\|privileged | AAOS 표준 `PERF_ODOMETER` 직접 읽기 | 쓰지 않음. 총 주행거리는 Pleos Odometer(`CAR_DRIVE`, normal)로 읽는다 |
 | `android.car.permission.CAR_SPEED` | dangerous | 차속 | 쓰지 않음 |
 | `android.permission.POST_NOTIFICATIONS` | dangerous | 서비스 알림 표시 | 요청하지 않음 (Pleos 문의 4번) |
-| `pleos.car.permission.TTS_SERVICE` | normal | Pleos TextToSpeech | Phase 5 이후 ([speech-check.md](speech-check.md)) |
-| `pleos.car.permission.STT_SERVICE` | normal | Pleos SpeechToText | Phase 5 이후 |
-| `android.permission.RECORD_AUDIO` | dangerous | 음성 인식 (마이크) | Phase 5 이후 |
-| `android.permission.INTERNET` | normal | Pleos TTS/STT SDK가 병합으로 추가 | TTS/STT를 넣으면 함께 들어온다 |
+| `android.permission.RECORD_AUDIO` | dangerous | 음성 인식 (마이크) | 선언하지 않음. 마이크는 Pleos 음성 서비스(`ai.pleos.playground.caas`)가 연다. STT SDK 매니페스트·문서(Declaring permissions)가 요구하는 권한은 `STT_SERVICE`뿐이고, 에뮬레이터에서 이 권한 없이 `request()` → `onReady` → 입력 크기(`onUpdatedRms`) 콜백까지 온다 |
 
 ## 4. 참고: Pleos 앱 마켓 심사 기준
 
