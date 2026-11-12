@@ -47,8 +47,8 @@ android {
         applicationId = "com.$appSlug.$appIdSuffix"
         minSdk = 28
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "1.1.1"
         resValue("string", "app_name", appName)
     }
 

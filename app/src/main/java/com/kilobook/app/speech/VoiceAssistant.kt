@@ -26,6 +26,8 @@ enum class VoiceState { IDLE, SPEAKING, LISTENING }
  *   A trip counts as spoken only when the sentence finished; one cut off by driving or the screen hiding
  *   is said again at the next stop. The set lives at process level, so a new screen does not repeat it.
  * - One exchange: audio focus → 200 ms pre-roll silence → question → (listen for the answer) → abandon focus.
+ *   What to say is fixed right before speaking: if the card's list changes first (on opening, a missed trip
+ *   is added a moment later), the waiting notice for the list on screen is said instead.
  *   Pre-roll: the Pleos guide prefers silence inside the audio data; the SDK plays through the Pleos speech
  *   service and exposes neither the PCM nor a silence option, so the delay is applied before speak().
  */
@@ -43,6 +45,11 @@ class VoiceAssistant(
     private val input = VoiceInput(context, ::log)
     private var exchange: Job? = null
     private var exchangeTripIds: Set<Long> = emptySet()
+    /** What the exchange in preparation will say; null once it starts speaking. */
+    private var pending: Pending? = null
+
+    /** [question] about [askTripId], or (both null) the waiting notice for [waitingIds]. */
+    private class Pending(val question: String?, val askTripId: Long?, val waitingIds: Set<Long>)
 
     private val _state = MutableStateFlow(VoiceState.IDLE)
     val state: StateFlow<VoiceState> = _state.asStateFlow()
@@ -82,8 +89,16 @@ class VoiceAssistant(
      */
     fun onCardShown(trip: Trip, waitingIds: List<Long>, now: Long) {
         if (!guideEnabled()) return
+        if (exchange?.isActive == true) {
+            val before = pending
+            if (before != null && waitingIds.toSet() != before.waitingIds) {
+                pending = Pending(null, null, waitingIds.toSet())
+                exchangeTripIds = waitingIds.toSet()
+                log("Voice: 말하기 전에 카드 목록이 바뀜 -> 대기 안내 ${waitingIds.size}건")
+            }
+            return
+        }
         if (trip.id in spokenTripIds) return
-        if (exchange?.isActive == true) return
         if (!mayTalk()) {
             log("Voice: 말하지 않음 (정차 신호 없음 또는 주행 중)")
             return
@@ -91,10 +106,13 @@ class VoiceAssistant(
         val km = trip.distanceKm(null)
         val justEnded = trip.source == TripSource.DETECTED && trip.askCount == 0 && km != null &&
             trip.endTime?.let { now - it in 0..JUST_ENDED_MILLIS } == true
-        val text = if (justEnded) VoicePrompts.tripQuestion(km!!) else VoicePrompts.waitingNotice(waitingIds.size)
-        val coveredIds = if (justEnded) setOf(trip.id) else waitingIds.toSet()
-        exchangeTripIds = coveredIds
-        exchange = scope.launch { run(text, coveredIds, askTripId = trip.id.takeIf { justEnded }) }
+        pending = if (justEnded) {
+            Pending(VoicePrompts.tripQuestion(km!!), trip.id, waitingIds.toSet())
+        } else {
+            Pending(null, null, waitingIds.toSet())
+        }
+        exchangeTripIds = if (justEnded) setOf(trip.id) else waitingIds.toSet()
+        exchange = scope.launch { run() }
     }
 
     /** The card for [tripId] went away (answered by touch, hidden): stop talking about it. */
@@ -109,13 +127,14 @@ class VoiceAssistant(
         if (!job.isActive) return
         log("Voice: 중단 ($reason)")
         job.cancel()
+        pending = null
         output.stop()
         input.stop()
         focus.release()
         _state.value = VoiceState.IDLE
     }
 
-    private suspend fun run(text: String, coveredIds: Set<Long>, askTripId: Long?) {
+    private suspend fun run() {
         try {
             // The screen may have just opened: wait briefly for the engine instead of skipping.
             val ready = withTimeoutOrNull(ENGINE_WAIT_MILLIS) { output.state.first { it != EngineState.INITIALIZING } }
@@ -136,6 +155,12 @@ class VoiceAssistant(
                 log("Voice: 말하지 않음 (선행 묵음 중 주행 시작)")
                 return
             }
+            val say = pending ?: return
+            pending = null
+            val askTripId = say.askTripId
+            val coveredIds = if (askTripId != null) setOf(askTripId) else say.waitingIds
+            exchangeTripIds = coveredIds
+            val text = say.question ?: VoicePrompts.waitingNotice(coveredIds.size)
             _state.value = VoiceState.SPEAKING
             val spoken = output.speak(text)
             if (!spoken) return
