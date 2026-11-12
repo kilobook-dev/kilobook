@@ -24,7 +24,7 @@
 | `appNameEn` | KiloBook | 제출 APK 파일명, 서명 인증서 `O=<appNameEn>` |
 | `appSlug` | kilobook | 패키지 이름 `com.<appSlug>.<appIdSuffix>`, 서명 인증서 `CN=<appSlug>-dev`, 키 파일 이름 |
 | `appIdSuffix` | app | 패키지 이름 마지막 부분 |
-| `teamName` | KiloBook | 제출 APK 파일명 `apk/<teamName>_<appNameEn>_release.apk`. 개인 참가라 팀명 자리에 앱 이름을 쓴다 (운영사무국 답변) |
+| `teamName` | KiloBook | 제출 APK 파일명 `apk/<teamName>_<appNameEn>_release.apk`. 개인 참가도 팀명·닉네임을 쓸 수 있어 앱 이름을 그대로 쓴다 (운영사무국 답변) |
 
 결과: 패키지 `com.kilobook.app`, 제출 APK `apk/KiloBook_KiloBook_release.apk`, 서명 인증서 `CN=kilobook-dev, O=KiloBook`.
 
@@ -51,6 +51,7 @@
   결과: `apk/README.md` "확인 결과".
 - **Phase 7(음성 용도 확인) 완료 (2026-11-10~12).** 정차 시 Pleos TTS로 한 번 묻기, 음성 답(STT), 설정 스위치 2개, 오디오 포커스, versionName 1.1.0 / versionCode 2.
   시험 V1~V9 통과 (음성 답 4가지 모두 인식). "음성으로 답하기" 기본 켬. release v1.1.0: Cold Boot·새 설치로 S1·S3·S4·S8 + 음성 질문 통과 (`apk/README.md`). 태그 `v1.1.0`. 결과: `docs/phase7/README.md`.
+- **v1.1.1 (2026-11-12)**: 시연 스크립트(`scripts/demo.sh`, `docs/demo/README.md`)로 찾은 대기 안내 개수 버그 고침 (versionCode 3). Cold Boot·새 설치로 S1·S3·S4·S8 + 음성 다시 통과. 태그 `v1.1.1`.
 
 | 시나리오 | 결과 | 요지 |
 |---|---|---|
@@ -72,6 +73,7 @@
 
 1. **시작**: 열린 Trip이 없고 총 주행거리가 늘면 `OPEN` Trip. `startOdometer` = 늘기 직전 값.
 2. **종료**: 기어 P → `GEAR_PARK`, 주차 브레이크 → `PARKING_BRAKE`. 둘 다 못 읽으면 대체 규칙: N분 무변화 → `ODOMETER_IDLE`(종료 시각 = 마지막 변화), 또는 "주행 종료" 버튼 → `MANUAL_BUTTON`.
+   기어·주차 브레이크는 AAOS 표준 `CarPropertyManager`(`GEAR_SELECTION`, `CURRENT_GEAR`, `PARKING_BRAKE_ON`)로 읽는다. Pleos 문서 「API 호환성 및 가용성」 안내 범위에서 쓰는 것으로 정리됐다 (운영사무국, 2026-11-12): https://document.pleos.ai/docs/pleos-only/vehicle-app-planning-guide/api-compatibility-availability
 3. **용도 확인**: 종료 → `AWAITING_PURPOSE`, 카드(업무/출퇴근/개인/나중에). 선택 → `DONE`.
 4. **나중에**: `askCount`+1. 화면 복귀나 주행→정차 때 다시 물음. 주행 중이거나 판단 신호를 못 읽으면 묻지 않음.
 5. **누락 감지**: 시작 때 현재 값이 `lastKnownOdometer`보다 0.1 km 이상 크고 열린 Trip이 없으면 `GAP` Trip.
@@ -96,7 +98,8 @@
 - **예시 기록**: 디버그 탭에서만 넣고 지운다 (7건, `isSample`). 홈·목록·요약에 "예시"로 표시된다. 제출 시연 전에 지울지 정한다.
 - **업무사용비율** = (업무 + 출퇴근) km ÷ 총 주행거리. 국세청 업무용승용차 운행기록부 기준: ⑫ 업무용 사용거리 = ⑧ 출·퇴근용 + ⑨ 일반 업무용, ⑬ 업무사용비율 = ⑫ ÷ ⑪ 총주행거리. 용도 미확인 주행은 분모에만 넣고 "미확인 X km"로 따로 보여 준다.
 - **예시 기록 버튼**: 디버그 패널 전용. 화면과 기록에 "예시"로 표시하고 한 번에 지울 수 있게 한다.
-- **제출 APK**: `apk/KiloBook_KiloBook_release.apk`, release 서명, R8(코드 축소) 끔. 서명 키 파일은 저장소 밖, 비밀번호는 `local.properties`(git 제외).
+- **제출 APK**: `apk/KiloBook_KiloBook_release.apk`, release 서명, R8(코드 축소) 끔. 서명 키 파일은 저장소 밖, 비밀번호는 `~/.gradle/gradle.properties`(저장소 밖).
+  용량 제한은 600MB 이하 (운영사무국 답변) → 40.6 MB 그대로, R8은 계속 끈다.
 - **작업 환경**: 2026-11-09부터 다른 PC에서 GitHub 저장소를 clone해 작업한다 (7절).
 
 **운영사무국 확인 (2026-11-06)**
@@ -106,7 +109,7 @@
   점검 결과는 `docs/permissions.md`. 걸리던 `CAR_VENDOR_EXTENSION`(signature|privileged, 디버그 비교 표시용)은 삭제했다 (2026-11-09).
   지금 10개 (Phase 7에 `TTS_SERVICE`·`STT_SERVICE`·`INTERNET`이 늘었다). AndroidX가 넣는 앱 자신의 `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` 말고는 모두 Normal이다. `RECORD_AUDIO`는 필요 없다.
 - **공모전 자료**는 Pleos Playground 공개 문서가 전부이고, 공개 API 외에는 제공되지 않는다.
-- 개인 참가자는 제출 APK 파일명의 팀명 자리에 앱 이름을 써도 된다 → `KiloBook_KiloBook_release.apk`.
+- 개인 참가자도 팀명·닉네임을 쓸 수 있다 (운영사무국 답변). 제출 APK 파일명 `KiloBook_KiloBook_release.apk`는 그대로 둔다.
 
 **TTS/STT와 라이선스**
 
@@ -152,6 +155,7 @@
 
 - ~~새 PC로 옮기기~~ (2026-11-09 완료). 실제 절차(별칭을 config 맨 위에, `AddKeysToAgent no`, git 훅, Claude Code 표기 끄기)를 7절에 반영했다.
 - ~~Phase 7 마무리: V8·V9, 답하기 기본값, Back 키 재확인, release·Cold Boot 시험, 태그 `v1.1.0`~~ (2026-11-12 완료).
+- ~~시연 스크립트, 제출 방식 반영, v1.1.1~~ (2026-11-12 완료). 남은 것: 시연 영상 녹화, 접수 메일, Public 전환 (아래).
 - 제출 준비 남은 일 (아래). Phase 5·6은 끝났다.
 
 **Phase 5 — 제출용 MVP 화면** (2026-11-09 완료, 결과 `docs/phase5/README.md`)
@@ -176,12 +180,14 @@
 - ~~서명 키 → `./gradlew releaseApk` → Cold Boot·새 설치로 S1·S3·S4·S8 → `apksigner verify --print-certs`~~ (Phase 6, `apk/README.md`).
 - ~~README를 공모전 필수 4항목으로~~ (Phase 6): 앱 이름 및 한 줄 소개 / 실행 방법 / 테스트 환경 및 필요한 설정 / APK 파일 위치.
 - 서명 키 백업 1부를 이 PC 밖에 둔다 (사용자).
-- 시연 영상 (에뮬레이터 시간대는 한국 표준시로 바꿔 둠). 예시 기록을 쓸지, 쓴다면 화면의 "예시" 표시를 그대로 둔다.
-- 비공개 저장소라면 심사용 GitHub 계정을 Collaborator로 초대 (계정 이름은 공모전 공지에서 확인).
+- 시연 영상 (에뮬레이터 시간대는 한국 표준시로 바꿔 둠). 장면별 명령: `scripts/demo.sh` ([docs/demo/README.md](docs/demo/README.md)).
+  예시 기록을 쓸지, 쓴다면 화면의 "예시" 표시를 그대로 둔다.
+- **접수 메일**: 저장소 주소와 최종 커밋 번호(commit hash, 40자리)를 적는다. 심사는 그 커밋 기준이다. 메일을 보낸 뒤에는 그 커밋 기준이므로, 커밋을 더 하면 번호를 다시 확인한다.
+- **저장소 공개**: 마감(11/15 23:59) 뒤 **11/16(월)까지 Public으로 전환**하고 **11/23까지 공개를 유지**한다. 전환하지 않으면 개발 산출물 가산점이 빠진다 (사용자가 GitHub 웹에서 `kilobook-dev` 계정으로 전환).
 - 기획서·동의서는 사용자가 작성. 개발 계획(SDK/API 사용 계획)은 `docs/spike/` 결과를 쓴다.
 - `docs/pleos-questions.md`를 Pleos에 보낼지는 사용자가 정한다.
 
-**일정 제안**: Phase 5·6 11/09 완료 → 시연 영상 11/10~12 → 메일 제출 11/13~14.
+**일정**: Phase 5·6 11/09, Phase 7 11/12 완료 → 시연 영상 → 메일 제출 (마감 11/15 23:59) → 11/16(월)까지 Public 전환 → 11/23까지 공개 유지.
 
 ## 7. 새 PC 세팅 순서
 
@@ -298,7 +304,8 @@
 - `docs/spike/` — Phase 1~4 기록과 시나리오 S1~S8 (`phase4-scenarios.md`는 회귀 테스트 안내로 계속 쓴다. 맨 위에 Phase 5 화면 위치)
 - `docs/permissions.md` — 권한 점검 (protectionLevel, 운영 기준 Normal·Dangerous만)
 - `docs/open-source-licenses.md` — 오픈소스 라이선스 (설정 화면 표기용 목록 + 라이브러리별 부록)
-- `docs/phase7/README.md` — 음성 용도 확인(TTS/STT): 언제 말하는지, 오디오 포커스·선행 묵음, 시험 결과 V1~V12
+- `docs/phase7/README.md` — 음성 용도 확인(TTS/STT): 언제 말하는지, 오디오 포커스·선행 묵음, 시험 결과 V1~V13
+- `docs/demo/README.md` — 시연 영상: `scripts/demo.sh`로 장면 1~5를 명령 하나씩 재현
 - `docs/speech-check.md` — TTS/STT 동작 확인과 계획 (Phase 7 이전)
 - `docs/pleos-questions.md` — Pleos 문의 목록 (DO 배포, specialUse, 상주 서비스 기준, 알림, 부팅 자동 시작)
 - `apk/README.md` — 제출 APK 규칙

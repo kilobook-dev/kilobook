@@ -44,6 +44,7 @@
 | 에뮬레이터 | **Pleos Connect Emulator v2.1.0**, AVD `Pleos_Connect_v2.1.0` (Android 14 / API 34, 2560×1440). 설정: [Pleos 문서](https://document.pleos.ai/docs/connect/guide/getting-started/application-development/setup-connect-sdk-emulator) |
 | Vehicle SDK | `ai.pleos.playground:Vehicle:2.3.2` |
 | 음성 SDK | `ai.pleos.playground:TextToSpeech:3.3.1`, `ai.pleos.playground:SpeechToText:3.3.1` (`ON_DEVICE` 모드, 네트워크 불필요) |
+| 기어·주차 브레이크 | AAOS 표준 `CarPropertyManager` (`GEAR_SELECTION`, `CURRENT_GEAR`, `PARKING_BRAKE_ON`, 권한 `CAR_POWERTRAIN` normal). Pleos 문서 [「API 호환성 및 가용성」](https://document.pleos.ai/docs/pleos-only/vehicle-app-planning-guide/api-compatibility-availability) 안내 범위에서 사용 |
 | 확인한 화면 | 가로 창(기본)과 세로 창(내비와 1:1 분할) |
 
 **시간대 (한국 표준시)** — 에뮬레이터는 처음에 미 태평양 시간이라 기록 시각이 17시간 이르게 보인다. 한 번 바꾸면 유지된다.
@@ -74,7 +75,7 @@
 
 ## 4. APK 파일 위치
 
-[`apk/KiloBook_KiloBook_release.apk`](apk/KiloBook_KiloBook_release.apk) — 서명된 release APK (서명 인증서 `CN=kilobook-dev, O=KiloBook`, 버전 1.1.0). 다시 만드는 법: [apk/README.md](apk/README.md)
+[`apk/KiloBook_KiloBook_release.apk`](apk/KiloBook_KiloBook_release.apk) — 서명된 release APK (서명 인증서 `CN=kilobook-dev, O=KiloBook`, 버전 1.1.1). 다시 만드는 법: [apk/README.md](apk/README.md)
 
 ## 오픈소스 라이선스
 
@@ -111,6 +112,7 @@ Android Studio에서는 Settings › Build Tools › Gradle › Gradle JDK를 JD
 ```
 app.properties                 앱 이름 설정 (appName, appNameEn, appSlug, appIdSuffix, teamName)
 scripts/create-release-key.sh  release 서명 키 생성 (저장소 밖)
+scripts/demo.sh                시연 영상용: 장면마다 명령 하나로 기어·총 주행거리 신호 (docs/demo)
 scripts/git-hooks/             커밋·push 전 작성자와 공동 작성자 줄 검사 (.git/hooks에 복사해서 씀)
 apk/                           제출용 release APK 위치
 app/src/main/java/com/kilobook/app/
@@ -161,6 +163,7 @@ app/src/main/java/com/kilobook/app/
 - [권한 점검](docs/permissions.md) — 선언한 권한과 보호 수준 (Normal·Dangerous만 사용)
 - [오픈소스 라이선스](docs/open-source-licenses.md)
 - [Phase 7 — 음성 용도 확인 (TTS/STT), 시험 결과](docs/phase7/README.md)
+- [시연 영상: 터미널로 차량 신호 보내기 (`scripts/demo.sh`)](docs/demo/README.md)
 - [TTS/STT 동작 확인과 계획 (Phase 7 이전)](docs/speech-check.md)
 - [Pleos 문의 목록](docs/pleos-questions.md)
 
