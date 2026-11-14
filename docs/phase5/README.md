@@ -18,13 +18,17 @@
 
 | 화면 | 캡처 |
 |---|---|
-| 홈 (예시 기록 포함) | [01-home.png](01-home.png) |
+| 홈 (예시 기록 포함, 음성 질문 뒤 듣는 중) | [01-home.png](01-home.png) |
 | 주행 중 | [02-driving.png](02-driving.png) |
 | 기록 (예시 기록 포함) | [03-trips.png](03-trips.png) |
 | 설정 | [04-settings.png](04-settings.png) |
 | 오픈소스 라이선스 | [05-licenses.png](05-licenses.png) |
 | 디버그 | [06-debug.png](06-debug.png) |
 | 홈, 세로 창 (내비와 1:1) | [07-home-portrait.png](07-home-portrait.png) |
+
+캡처는 2026-11-14에 release v1.1.1(Phase 7 음성 포함)로 다시 찍었다. 처음 캡처(2026-11-09, `0.1.0-spike`)와 다른 점:
+01 용도 카드 아래 "● 듣고 있어요"와 상태 표시줄의 마이크 표시, 04 설정의 음성 안내·음성으로 답하기 스위치와 버전 1.1.1, 05 Phase 7에서 늘어난 라이브러리 목록.
+위 화면 구조와 아래 시험 결과는 Phase 5(2026-11-09) 기준이다. 음성은 [../phase7/README.md](../phase7/README.md).
 
 ## 5-0 기준 확인 (Pleos 디자인 가이드)
 
